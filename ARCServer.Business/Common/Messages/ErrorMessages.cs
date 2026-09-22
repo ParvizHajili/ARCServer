@@ -92,6 +92,30 @@ namespace ARCServer.Business.Common.Messages
                 "Rəng kodu #RRGGBB formatında olmalıdır (məs: #FF5733).";
         }
 
+        public static class Auth
+        {
+            public const string InvalidCredentials = "İstifadəçi adı və ya parol yanlışdır.";
+            public const string UserNotFound = "İstifadəçi tapılmadı.";
+            public const string UserInactive = "İstifadəçi deaktiv edilib.";
+            public const string AccessDenied = "Bu əməliyyat üçün icazəniz yoxdur.";
+        }
+
+        public static class User
+        {
+            public const string NotFound = "İstifadəçi tapılmadı.";
+            public const string UserNameExists = "'{0}' istifadəçi adı artıq mövcuddur.";
+            public const string EmailExists = "'{0}' e-poçt artıq mövcuddur.";
+            public const string PasswordRequired = "Parol mütləqdir.";
+            public const string CannotDeleteSelf = "Öz hesabınızı silə bilməzsiniz.";
+            public const string CannotDeactivateSelf = "Öz hesabınızı deaktiv edə bilməzsiniz.";
+            public const string CannotModifySystemAdmin = "Sistem SUPERADMIN istifadəçisi bu şəkildə dəyişdirilə bilməz.";
+            public const string InvalidPermission = "Seçilmiş icazələrdən biri tapılmadı: {0}.";
+            public const string CreateFailed = "İstifadəçi yaradıla bilmədi.";
+            public const string UpdateFailed = "İstifadəçi yenilənə bilmədi.";
+            public const string FirstNameRequired = "Ad mütləqdir.";
+            public const string LastNameRequired = "Soyad mütləqdir.";
+        }
+
         public static class Product
         {
             public const string NotFound = "Məhsul tapılmadı.";

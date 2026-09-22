@@ -13,15 +13,17 @@ namespace ARCServer.Data.Extensions
         /// - no DB → create + apply all migrations
         /// - DB exists, migrations up to date → no-op for migrations
         /// - DB exists, pending migrations → apply update
-        /// Then seed default categories if the table is empty.
+        /// Then seed categories + identity/permissions.
         /// </summary>
         public static async Task InitializeArcDatabaseAsync(
             this IServiceProvider services,
+            IReadOnlyList<PermissionDefinition>? permissionCatalog = null,
             CancellationToken cancellationToken = default)
         {
             using var scope = services.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<ArcDbContext>();
-            var logger = scope.ServiceProvider
+            var provider = scope.ServiceProvider;
+            var db = provider.GetRequiredService<ArcDbContext>();
+            var logger = provider
                 .GetRequiredService<ILoggerFactory>()
                 .CreateLogger("ARCServer.Database");
 
@@ -65,6 +67,9 @@ namespace ARCServer.Data.Extensions
                 }
 
                 await CategorySeeder.SeedAsync(db, logger, cancellationToken);
+
+                var permissions = permissionCatalog ?? PermissionCatalog.FromPermissionCodes();
+                await IdentitySeeder.SeedAsync(provider, permissions, logger, cancellationToken);
             }
             catch (Exception ex)
             {

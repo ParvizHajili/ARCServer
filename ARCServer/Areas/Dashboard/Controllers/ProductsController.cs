@@ -1,6 +1,8 @@
+using ARCServer.Authorization;
 using ARCServer.Business.Dtos.Common;
 using ARCServer.Business.Dtos.Products;
 using ARCServer.Business.Services.Products;
+using ARCServer.Domain.Common;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ARCServer.Areas.Dashboard.Controllers
@@ -16,6 +18,7 @@ namespace ARCServer.Areas.Dashboard.Controllers
         }
 
         [HttpGet]
+        [RequirePermission(PermissionCodes.Products.List)]
         [ProducesResponseType(typeof(PaginationResponseDto<ProductListItemDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetAll(
@@ -27,6 +30,7 @@ namespace ARCServer.Areas.Dashboard.Controllers
         }
 
         [HttpGet("{id:int}")]
+        [RequirePermission(PermissionCodes.Products.View)]
         [ProducesResponseType(typeof(ProductDetailDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
@@ -36,6 +40,7 @@ namespace ARCServer.Areas.Dashboard.Controllers
         }
 
         [HttpPost]
+        [RequirePermission(PermissionCodes.Products.Create)]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(typeof(ProductDetailDto), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -54,6 +59,7 @@ namespace ARCServer.Areas.Dashboard.Controllers
         }
 
         [HttpPut("{id:int}")]
+        [RequirePermission(PermissionCodes.Products.Update)]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(typeof(ProductDetailDto), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -74,6 +80,7 @@ namespace ARCServer.Areas.Dashboard.Controllers
         }
 
         [HttpDelete("{id:int}")]
+        [RequirePermission(PermissionCodes.Products.Delete)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)

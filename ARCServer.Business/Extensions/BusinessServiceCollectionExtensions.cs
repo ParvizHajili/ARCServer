@@ -1,9 +1,12 @@
+using ARCServer.Business.Services.Auth;
 using ARCServer.Business.Services.Brands;
 using ARCServer.Business.Services.Categories;
 using ARCServer.Business.Services.Colors;
 using ARCServer.Business.Services.ManufacturerCountries;
+using ARCServer.Business.Services.Permissions;
 using ARCServer.Business.Services.Products;
 using ARCServer.Business.Services.Storage;
+using ARCServer.Business.Services.Users;
 using ARCServer.Business.Settings;
 using ARCServer.Business.Validators.Categories;
 using FluentValidation;
@@ -25,6 +28,10 @@ namespace ARCServer.Business.Extensions
 
             services.AddAutoMapper(typeof(BusinessServiceCollectionExtensions).Assembly);
             services.AddValidatorsFromAssemblyContaining<CreateCategoryDtoValidator>();
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IPermissionService, PermissionService>();
+            services.AddScoped<IUserPermissionService, UserPermissionService>();
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IManufacturerCountryService, ManufacturerCountryService>();
             services.AddScoped<IBrandService, BrandService>();

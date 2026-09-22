@@ -1,6 +1,8 @@
+using ARCServer.Authorization;
 using ARCServer.Business.Dtos.Colors;
 using ARCServer.Business.Dtos.Common;
 using ARCServer.Business.Services.Colors;
+using ARCServer.Domain.Common;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ARCServer.Areas.Dashboard.Controllers
@@ -16,6 +18,7 @@ namespace ARCServer.Areas.Dashboard.Controllers
         }
 
         [HttpGet]
+        [RequirePermission(PermissionCodes.Colors.List)]
         [ProducesResponseType(typeof(PaginationResponseDto<ColorDetailDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetAll(
@@ -27,6 +30,7 @@ namespace ARCServer.Areas.Dashboard.Controllers
         }
 
         [HttpGet("{id:int}")]
+        [RequirePermission(PermissionCodes.Colors.View)]
         [ProducesResponseType(typeof(ColorDetailDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById(int id, CancellationToken cancellationToken)
@@ -36,6 +40,7 @@ namespace ARCServer.Areas.Dashboard.Controllers
         }
 
         [HttpPost]
+        [RequirePermission(PermissionCodes.Colors.Create)]
         [ProducesResponseType(typeof(ColorDetailDto), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Create(
@@ -47,6 +52,7 @@ namespace ARCServer.Areas.Dashboard.Controllers
         }
 
         [HttpPut("{id:int}")]
+        [RequirePermission(PermissionCodes.Colors.Update)]
         [ProducesResponseType(typeof(ColorDetailDto), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -60,6 +66,7 @@ namespace ARCServer.Areas.Dashboard.Controllers
         }
 
         [HttpDelete("{id:int}")]
+        [RequirePermission(PermissionCodes.Colors.Delete)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)

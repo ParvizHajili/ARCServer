@@ -1,10 +1,22 @@
 using System.Linq.Expressions;
 using ARCServer.Domain.Entities;
+using ARCServer.Domain.Entities.Identity;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace ARCServer.Data.Context
 {
-    public class ArcDbContext : DbContext
+    public class ArcDbContext
+        : IdentityDbContext<
+            ApplicationUser,
+            ApplicationRole,
+            int,
+            IdentityUserClaim<int>,
+            IdentityUserRole<int>,
+            IdentityUserLogin<int>,
+            IdentityRoleClaim<int>,
+            IdentityUserToken<int>>
     {
         public ArcDbContext(DbContextOptions<ArcDbContext> options)
             : base(options)
@@ -44,6 +56,12 @@ namespace ARCServer.Data.Context
         public DbSet<ProductColor> ProductColors => Set<ProductColor>();
 
         public DbSet<ProductImage> ProductImages => Set<ProductImage>();
+
+        public DbSet<Permission> Permissions => Set<Permission>();
+
+        public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+
+        public DbSet<UserPermission> UserPermissions => Set<UserPermission>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

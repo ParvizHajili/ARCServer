@@ -1,5 +1,7 @@
+using ARCServer.Authorization;
 using ARCServer.Business.Extensions;
 using ARCServer.Data.Extensions;
+using ARCServer.Extensions;
 
 namespace ARCServer
 {
@@ -11,9 +13,10 @@ namespace ARCServer
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddArcSwagger();
 
             builder.Services.AddArcData(builder.Configuration);
+            builder.Services.AddArcIdentity(builder.Configuration);
             builder.Services.AddArcBusiness(builder.Configuration);
 
             builder.Services.AddCors(options =>
@@ -31,7 +34,8 @@ namespace ARCServer
 
             var app = builder.Build();
 
-            await app.Services.InitializeArcDatabaseAsync();
+            var permissionCatalog = PermissionAttributeDiscovery.BuildCatalog(typeof(Program).Assembly);
+            await app.Services.InitializeArcDatabaseAsync(permissionCatalog);
 
             if (app.Environment.IsDevelopment())
             {
@@ -39,8 +43,12 @@ namespace ARCServer
                 app.UseSwaggerUI();
             }
 
-            app.UseHttpsRedirection();
             app.UseCors("ArcClient");
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseHttpsRedirection();
+            }
+            app.UseAuthentication();
             app.UseAuthorization();
             app.MapControllers();
 
