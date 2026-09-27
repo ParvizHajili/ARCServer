@@ -282,6 +282,22 @@ namespace ARCServer.Business.Services.Categories
                     totalCount));
         }
 
+        public async Task<ServiceResult<IReadOnlyList<CategoryDetailDto>>> GetCatalogAsync(
+            CancellationToken cancellationToken = default)
+        {
+            var categories = await _categoryRepository.Query()
+                .AsNoTracking()
+                .Include(x => x.Translations)
+                .Include(x => x.SubCategories)
+                    .ThenInclude(x => x.Translations)
+                .OrderBy(x => x.Order)
+                .ThenBy(x => x.Id)
+                .ToListAsync(cancellationToken);
+
+            IReadOnlyList<CategoryDetailDto> items = _mapper.Map<List<CategoryDetailDto>>(categories);
+            return ServiceResult<IReadOnlyList<CategoryDetailDto>>.Success(items);
+        }
+
         private static IQueryable<Category> ApplyCategorySort(
             IQueryable<Category> query,
             PaginationRequestDto request)

@@ -71,6 +71,8 @@ namespace ARCServer.Data.Context
 
         public DbSet<ProductSpinImage> ProductSpinImages => Set<ProductSpinImage>();
 
+        public DbSet<HeroVideo> HeroVideos => Set<HeroVideo>();
+
         public DbSet<Permission> Permissions => Set<Permission>();
 
         public DbSet<RolePermission> RolePermissions => Set<RolePermission>();

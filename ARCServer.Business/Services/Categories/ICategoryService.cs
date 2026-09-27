@@ -25,6 +25,9 @@ namespace ARCServer.Business.Services.Categories
             PaginationRequestDto request,
             CancellationToken cancellationToken = default);
 
+        Task<ServiceResult<IReadOnlyList<CategoryDetailDto>>> GetCatalogAsync(
+            CancellationToken cancellationToken = default);
+
         Task<ServiceResult<bool>> DeleteAsync(
             int id,
             int? deletorId = null,

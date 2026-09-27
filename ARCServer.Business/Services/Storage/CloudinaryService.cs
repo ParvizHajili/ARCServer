@@ -49,6 +49,31 @@ namespace ARCServer.Business.Services.Storage
             return Task.FromResult(Upload(file, folder));
         }
 
+        public Task<string> UploadVideoAsync(
+            IFormFile file,
+            string folder,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            ValidateVideo(file, folder);
+
+            var uploadParams = new VideoUploadParams
+            {
+                File = new FileDescription(file.FileName, file.OpenReadStream()),
+                Folder = folder.Trim().Trim('/'),
+            };
+
+            var uploadResult = _cloudinary.Value.Upload(uploadParams);
+            if (uploadResult.Error is not null)
+            {
+                throw new InvalidOperationException(
+                    $"Cloudinary yükləmə xətası: {uploadResult.Error.Message}");
+            }
+
+            return Task.FromResult(uploadResult.SecureUrl?.ToString()
+                ?? throw new InvalidOperationException("Cloudinary secure URL qaytarmadı."));
+        }
+
         private Cloudinary CreateClient()
         {
             if (string.IsNullOrWhiteSpace(_settings.CloudName)
@@ -70,6 +95,30 @@ namespace ARCServer.Business.Services.Storage
                 throw new ArgumentException(
                     ErrorMessages.Format(ErrorMessages.Common.NotEmpty, ErrorMessages.Fields.Image),
                     nameof(file));
+            }
+
+            if (string.IsNullOrWhiteSpace(folder))
+            {
+                throw new ArgumentException("Cloudinary folder adı boş ola bilməz.", nameof(folder));
+            }
+        }
+
+        private static void ValidateVideo(IFormFile file, string folder)
+        {
+            if (file is null || file.Length == 0)
+            {
+                throw new ArgumentException("Video boş ola bilməz.", nameof(file));
+            }
+
+            if (file.Length > 25 * 1024 * 1024)
+            {
+                throw new ArgumentException("Video 25 MB-dan böyük ola bilməz.", nameof(file));
+            }
+
+            var contentType = file.ContentType?.ToLowerInvariant() ?? string.Empty;
+            if (!contentType.StartsWith("video/"))
+            {
+                throw new ArgumentException("Yalnız video fayl yüklənə bilər.", nameof(file));
             }
 
             if (string.IsNullOrWhiteSpace(folder))

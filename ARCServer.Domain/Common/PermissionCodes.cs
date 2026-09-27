@@ -69,6 +69,12 @@ namespace ARCServer.Domain.Common
             public const string Delete = "Colors.Delete";
         }
 
+        public static class HeroVideo
+        {
+            public const string List = "HeroVideo.List";
+            public const string Update = "HeroVideo.Update";
+        }
+
         public static class Products
         {
             public const string List = "Products.List";

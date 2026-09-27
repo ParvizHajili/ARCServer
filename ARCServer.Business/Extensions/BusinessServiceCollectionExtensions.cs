@@ -3,6 +3,7 @@ using ARCServer.Business.Services.Brands;
 using ARCServer.Business.Services.Categories;
 using ARCServer.Business.Services.Colors;
 using ARCServer.Business.Services.Dashboard;
+using ARCServer.Business.Services.HeroVideos;
 using ARCServer.Business.Services.Diameters;
 using ARCServer.Business.Services.ManufacturerCountries;
 using ARCServer.Business.Services.Permissions;
@@ -46,6 +47,7 @@ namespace ARCServer.Business.Extensions
             services.AddScoped<IProductService, ProductService>();
             services.AddScoped<IProductSpinService, ProductSpinService>();
             services.AddScoped<IDashboardService, DashboardService>();
+            services.AddScoped<IHeroVideoService, HeroVideoService>();
 
             return services;
         }

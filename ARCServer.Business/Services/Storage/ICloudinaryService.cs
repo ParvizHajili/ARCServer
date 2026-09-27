@@ -12,5 +12,7 @@ namespace ARCServer.Business.Services.Storage
         string Upload(IFormFile file, string folder);
 
         Task<string> UploadAsync(IFormFile file, string folder, CancellationToken cancellationToken = default);
+
+        Task<string> UploadVideoAsync(IFormFile file, string folder, CancellationToken cancellationToken = default);
     }
 }
