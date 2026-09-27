@@ -4,6 +4,7 @@ using ARCServer.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ARCServer.Data.Migrations
 {
     [DbContext(typeof(ArcDbContext))]
-    partial class ArcDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260927150455_ExtractProductMeasurements")]
+    partial class ExtractProductMeasurements
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -367,20 +370,72 @@ namespace ARCServer.Data.Migrations
                     b.Property<int?>("UpdaterId")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("Value")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
+                    b.HasKey("Id");
+
+                    b.HasIndex("Id", "Deleted")
+                        .IsUnique();
+
+                    b.ToTable("Diameters", (string)null);
+                });
+
+            modelBuilder.Entity("ARCServer.Domain.Entities.DiameterTranslation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatorId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Deleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletorId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DiameterId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LanguageCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdaterId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Value")
+                    b.HasIndex("DiameterId", "LanguageCode")
                         .IsUnique()
                         .HasFilter("[Deleted] = 0");
 
                     b.HasIndex("Id", "Deleted")
                         .IsUnique();
 
-                    b.ToTable("Diameters", (string)null);
+                    b.HasIndex("LanguageCode", "Name")
+                        .IsUnique()
+                        .HasFilter("[Deleted] = 0");
+
+                    b.ToTable("DiameterTranslations", (string)null);
                 });
 
             modelBuilder.Entity("ARCServer.Domain.Entities.Identity.ApplicationRole", b =>
@@ -711,20 +766,72 @@ namespace ARCServer.Data.Migrations
                     b.Property<int?>("UpdaterId")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("Value")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("Value")
-                        .IsUnique()
-                        .HasFilter("[Deleted] = 0");
 
                     b.HasIndex("Id", "Deleted")
                         .IsUnique();
 
                     b.ToTable("Powers", (string)null);
+                });
+
+            modelBuilder.Entity("ARCServer.Domain.Entities.PowerTranslation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatorId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Deleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LanguageCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("PowerId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdaterId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Id", "Deleted")
+                        .IsUnique();
+
+                    b.HasIndex("LanguageCode", "Name")
+                        .IsUnique()
+                        .HasFilter("[Deleted] = 0");
+
+                    b.HasIndex("PowerId", "LanguageCode")
+                        .IsUnique()
+                        .HasFilter("[Deleted] = 0");
+
+                    b.ToTable("PowerTranslations", (string)null);
                 });
 
             modelBuilder.Entity("ARCServer.Domain.Entities.Product", b =>
@@ -773,9 +880,6 @@ namespace ARCServer.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<int?>("UpdaterId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ViewCount")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -1157,58 +1261,6 @@ namespace ARCServer.Data.Migrations
                     b.ToTable("ProductSizes", (string)null);
                 });
 
-            modelBuilder.Entity("ARCServer.Domain.Entities.ProductSpinImage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("CreatorId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Deleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
-                    b.Property<DateTime?>("DeletedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("DeletorId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("Order")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("UpdaterId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Id", "Deleted")
-                        .IsUnique();
-
-                    b.HasIndex("ProductId", "Order");
-
-                    b.ToTable("ProductSpinImages", (string)null);
-                });
-
             modelBuilder.Entity("ARCServer.Domain.Entities.ProductTranslation", b =>
                 {
                     b.Property<int>("Id")
@@ -1301,20 +1353,72 @@ namespace ARCServer.Data.Migrations
                     b.Property<int?>("UpdaterId")
                         .HasColumnType("int");
 
-                    b.Property<decimal>("Value")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("Value")
-                        .IsUnique()
-                        .HasFilter("[Deleted] = 0");
 
                     b.HasIndex("Id", "Deleted")
                         .IsUnique();
 
                     b.ToTable("Sizes", (string)null);
+                });
+
+            modelBuilder.Entity("ARCServer.Domain.Entities.SizeTranslation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("CreatorId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Deleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("DeletedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DeletorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LanguageCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<int>("SizeId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UpdaterId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Id", "Deleted")
+                        .IsUnique();
+
+                    b.HasIndex("LanguageCode", "Name")
+                        .IsUnique()
+                        .HasFilter("[Deleted] = 0");
+
+                    b.HasIndex("SizeId", "LanguageCode")
+                        .IsUnique()
+                        .HasFilter("[Deleted] = 0");
+
+                    b.ToTable("SizeTranslations", (string)null);
                 });
 
             modelBuilder.Entity("ARCServer.Domain.Entities.SubCategory", b =>
@@ -1553,6 +1657,17 @@ namespace ARCServer.Data.Migrations
                     b.Navigation("Color");
                 });
 
+            modelBuilder.Entity("ARCServer.Domain.Entities.DiameterTranslation", b =>
+                {
+                    b.HasOne("ARCServer.Domain.Entities.Diameter", "Diameter")
+                        .WithMany("Translations")
+                        .HasForeignKey("DiameterId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Diameter");
+                });
+
             modelBuilder.Entity("ARCServer.Domain.Entities.Identity.RolePermission", b =>
                 {
                     b.HasOne("ARCServer.Domain.Entities.Identity.Permission", "Permission")
@@ -1600,6 +1715,17 @@ namespace ARCServer.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("ManufacturerCountry");
+                });
+
+            modelBuilder.Entity("ARCServer.Domain.Entities.PowerTranslation", b =>
+                {
+                    b.HasOne("ARCServer.Domain.Entities.Power", "Power")
+                        .WithMany("Translations")
+                        .HasForeignKey("PowerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Power");
                 });
 
             modelBuilder.Entity("ARCServer.Domain.Entities.Product", b =>
@@ -1752,17 +1878,6 @@ namespace ARCServer.Data.Migrations
                     b.Navigation("Size");
                 });
 
-            modelBuilder.Entity("ARCServer.Domain.Entities.ProductSpinImage", b =>
-                {
-                    b.HasOne("ARCServer.Domain.Entities.Product", "Product")
-                        .WithMany("SpinImages")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
             modelBuilder.Entity("ARCServer.Domain.Entities.ProductTranslation", b =>
                 {
                     b.HasOne("ARCServer.Domain.Entities.Product", "Product")
@@ -1772,6 +1887,17 @@ namespace ARCServer.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("ARCServer.Domain.Entities.SizeTranslation", b =>
+                {
+                    b.HasOne("ARCServer.Domain.Entities.Size", "Size")
+                        .WithMany("Translations")
+                        .HasForeignKey("SizeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Size");
                 });
 
             modelBuilder.Entity("ARCServer.Domain.Entities.SubCategory", b =>
@@ -1864,6 +1990,11 @@ namespace ARCServer.Data.Migrations
                     b.Navigation("Translations");
                 });
 
+            modelBuilder.Entity("ARCServer.Domain.Entities.Diameter", b =>
+                {
+                    b.Navigation("Translations");
+                });
+
             modelBuilder.Entity("ARCServer.Domain.Entities.Identity.ApplicationRole", b =>
                 {
                     b.Navigation("RolePermissions");
@@ -1886,6 +2017,11 @@ namespace ARCServer.Data.Migrations
                     b.Navigation("Translations");
                 });
 
+            modelBuilder.Entity("ARCServer.Domain.Entities.Power", b =>
+                {
+                    b.Navigation("Translations");
+                });
+
             modelBuilder.Entity("ARCServer.Domain.Entities.Product", b =>
                 {
                     b.Navigation("Brands");
@@ -1902,14 +2038,17 @@ namespace ARCServer.Data.Migrations
 
                     b.Navigation("Sizes");
 
-                    b.Navigation("SpinImages");
-
                     b.Navigation("Translations");
                 });
 
             modelBuilder.Entity("ARCServer.Domain.Entities.ProductColor", b =>
                 {
                     b.Navigation("Images");
+                });
+
+            modelBuilder.Entity("ARCServer.Domain.Entities.Size", b =>
+                {
+                    b.Navigation("Translations");
                 });
 
             modelBuilder.Entity("ARCServer.Domain.Entities.SubCategory", b =>

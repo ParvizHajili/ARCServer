@@ -6,15 +6,9 @@ namespace ARCServer.Business.Dtos.Products
     {
         public string Code { get; set; } = string.Empty;
 
-        public string Size { get; set; } = string.Empty;
-
-        public string Diameter { get; set; } = string.Empty;
-
         public bool HasWarranty { get; set; }
 
         public bool IsMadeToOrder { get; set; }
-
-        public decimal PowerAmperes { get; set; }
 
         public int CategoryId { get; set; }
 
@@ -25,6 +19,15 @@ namespace ARCServer.Business.Dtos.Products
 
         /// <summary>JSON: int[]</summary>
         public string BrandIds { get; set; } = "[]";
+
+        /// <summary>JSON: int[]</summary>
+        public string SizeIds { get; set; } = "[]";
+
+        /// <summary>JSON: int[]</summary>
+        public string DiameterIds { get; set; } = "[]";
+
+        /// <summary>JSON: int[]</summary>
+        public string PowerIds { get; set; } = "[]";
 
         /// <summary>JSON: int[]</summary>
         public string ManufacturerCountryIds { get; set; } = "[]";
@@ -39,5 +42,11 @@ namespace ARCServer.Business.Dtos.Products
 
         /// <summary>JSON: int[] — yalnız update</summary>
         public string KeepImageIds { get; set; } = "[]";
+
+        /// <summary>Product gallery files, independent of color.</summary>
+        public List<IFormFile> ProductImages { get; set; } = [];
+
+        /// <summary>JSON: int[] — yalnız update, rəngə bağlı olmayan şəkillər</summary>
+        public string KeepProductImageIds { get; set; } = "[]";
     }
 }

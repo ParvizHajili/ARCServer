@@ -14,17 +14,6 @@ namespace ARCServer.Data.Configurations
                 .HasMaxLength(100)
                 .IsRequired();
 
-            builder.Property(x => x.Size)
-                .HasMaxLength(200)
-                .IsRequired();
-
-            builder.Property(x => x.Diameter)
-                .HasMaxLength(200)
-                .IsRequired();
-
-            builder.Property(x => x.PowerAmperes)
-                .HasPrecision(18, 3);
-
             builder.HasIndex(x => x.Code)
                 .IsUnique()
                 .HasFilter("[Deleted] = 0");
@@ -49,12 +38,37 @@ namespace ARCServer.Data.Configurations
                 .HasForeignKey(x => x.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.HasMany(x => x.Sizes)
+                .WithOne(x => x.Product)
+                .HasForeignKey(x => x.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasMany(x => x.Diameters)
+                .WithOne(x => x.Product)
+                .HasForeignKey(x => x.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasMany(x => x.Powers)
+                .WithOne(x => x.Product)
+                .HasForeignKey(x => x.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             builder.HasMany(x => x.ManufacturerCountries)
                 .WithOne(x => x.Product)
                 .HasForeignKey(x => x.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasMany(x => x.Colors)
+                .WithOne(x => x.Product)
+                .HasForeignKey(x => x.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasMany(x => x.Images)
+                .WithOne(x => x.Product)
+                .HasForeignKey(x => x.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasMany(x => x.SpinImages)
                 .WithOne(x => x.Product)
                 .HasForeignKey(x => x.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);

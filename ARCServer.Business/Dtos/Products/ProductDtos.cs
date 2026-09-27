@@ -15,15 +15,9 @@ namespace ARCServer.Business.Dtos.Products
     {
         public string Code { get; set; } = string.Empty;
 
-        public string Size { get; set; } = string.Empty;
-
-        public string Diameter { get; set; } = string.Empty;
-
         public bool HasWarranty { get; set; }
 
         public bool IsMadeToOrder { get; set; }
-
-        public decimal PowerAmperes { get; set; }
 
         public int CategoryId { get; set; }
 
@@ -33,6 +27,12 @@ namespace ARCServer.Business.Dtos.Products
 
         public List<int> BrandIds { get; set; } = [];
 
+        public List<int> SizeIds { get; set; } = [];
+
+        public List<int> DiameterIds { get; set; } = [];
+
+        public List<int> PowerIds { get; set; } = [];
+
         public List<int> ManufacturerCountryIds { get; set; } = [];
 
         public List<int> ColorIds { get; set; } = [];
@@ -40,11 +40,16 @@ namespace ARCServer.Business.Dtos.Products
         public List<IFormFile> Images { get; set; } = [];
 
         public List<int> ImageColorIds { get; set; } = [];
+
+        /// <summary>Product gallery images, not tied to a color.</summary>
+        public List<IFormFile> ProductImages { get; set; } = [];
     }
 
     public class UpdateProductDto : CreateProductDto
     {
         public List<int> KeepImageIds { get; set; } = [];
+
+        public List<int> KeepProductImageIds { get; set; } = [];
     }
 
     public class ProductTranslationResultDto
@@ -89,15 +94,9 @@ namespace ARCServer.Business.Dtos.Products
 
         public string Code { get; set; } = string.Empty;
 
-        public string Size { get; set; } = string.Empty;
-
-        public string Diameter { get; set; } = string.Empty;
-
         public bool HasWarranty { get; set; }
 
         public bool IsMadeToOrder { get; set; }
-
-        public decimal PowerAmperes { get; set; }
 
         public int CategoryId { get; set; }
 
@@ -111,7 +110,15 @@ namespace ARCServer.Business.Dtos.Products
 
         public List<ProductNamedRefDto> Brands { get; set; } = [];
 
+        public List<ProductNamedRefDto> Sizes { get; set; } = [];
+
+        public List<ProductNamedRefDto> Diameters { get; set; } = [];
+
+        public List<ProductNamedRefDto> Powers { get; set; } = [];
+
         public List<ProductNamedRefDto> ManufacturerCountries { get; set; } = [];
+
+        public List<ProductImageDetailDto> Images { get; set; } = [];
 
         public List<ProductColorDetailDto> Colors { get; set; } = [];
     }
@@ -128,7 +135,7 @@ namespace ARCServer.Business.Dtos.Products
 
         public string? SubCategoryName { get; set; }
 
-        public decimal PowerAmperes { get; set; }
+        public string Powers { get; set; } = string.Empty;
 
         public bool HasWarranty { get; set; }
 

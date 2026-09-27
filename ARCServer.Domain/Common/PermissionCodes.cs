@@ -33,6 +33,33 @@ namespace ARCServer.Domain.Common
             public const string Delete = "Brands.Delete";
         }
 
+        public static class Sizes
+        {
+            public const string List = "Sizes.List";
+            public const string View = "Sizes.View";
+            public const string Create = "Sizes.Create";
+            public const string Update = "Sizes.Update";
+            public const string Delete = "Sizes.Delete";
+        }
+
+        public static class Diameters
+        {
+            public const string List = "Diameters.List";
+            public const string View = "Diameters.View";
+            public const string Create = "Diameters.Create";
+            public const string Update = "Diameters.Update";
+            public const string Delete = "Diameters.Delete";
+        }
+
+        public static class Powers
+        {
+            public const string List = "Powers.List";
+            public const string View = "Powers.View";
+            public const string Create = "Powers.Create";
+            public const string Update = "Powers.Update";
+            public const string Delete = "Powers.Delete";
+        }
+
         public static class Colors
         {
             public const string List = "Colors.List";

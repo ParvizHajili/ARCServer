@@ -17,6 +17,11 @@ namespace ARCServer.Business.Dtos.Common
         public string? Search { get; set; }
 
         /// <summary>
+        /// When true, search matches the entity name only.
+        /// </summary>
+        public bool SearchNameOnly { get; set; }
+
+        /// <summary>
         /// Field name to sort by (entity-specific, e.g. order, az, en, ru, id).
         /// </summary>
         public string? SortBy { get; set; }

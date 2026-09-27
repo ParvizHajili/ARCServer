@@ -40,6 +40,12 @@ namespace ARCServer.Data.Context
 
         public DbSet<BrandTranslation> BrandTranslations => Set<BrandTranslation>();
 
+        public DbSet<Size> Sizes => Set<Size>();
+
+        public DbSet<Diameter> Diameters => Set<Diameter>();
+
+        public DbSet<Power> Powers => Set<Power>();
+
         public DbSet<Color> Colors => Set<Color>();
 
         public DbSet<ColorTranslation> ColorTranslations => Set<ColorTranslation>();
@@ -50,12 +56,20 @@ namespace ARCServer.Data.Context
 
         public DbSet<ProductBrand> ProductBrands => Set<ProductBrand>();
 
+        public DbSet<ProductSize> ProductSizes => Set<ProductSize>();
+
+        public DbSet<ProductDiameter> ProductDiameters => Set<ProductDiameter>();
+
+        public DbSet<ProductPower> ProductPowers => Set<ProductPower>();
+
         public DbSet<ProductManufacturerCountry> ProductManufacturerCountries =>
             Set<ProductManufacturerCountry>();
 
         public DbSet<ProductColor> ProductColors => Set<ProductColor>();
 
         public DbSet<ProductImage> ProductImages => Set<ProductImage>();
+
+        public DbSet<ProductSpinImage> ProductSpinImages => Set<ProductSpinImage>();
 
         public DbSet<Permission> Permissions => Set<Permission>();
 

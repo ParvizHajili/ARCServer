@@ -11,10 +11,37 @@ namespace ARCServer.Areas.Dashboard.Controllers
     public class ProductsController : DashboardControllerBase
     {
         private readonly IProductService _service;
+        private readonly IProductSpinService _spinService;
 
-        public ProductsController(IProductService service)
+        public ProductsController(IProductService service, IProductSpinService spinService)
         {
             _service = service;
+            _spinService = spinService;
+        }
+
+        [HttpGet("{id:int}/spin")]
+        [RequirePermission(PermissionCodes.Products.View)]
+        [ProducesResponseType(typeof(ProductSpinDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetSpin(int id, CancellationToken cancellationToken)
+        {
+            var result = await _spinService.GetAsync(id, cancellationToken);
+            return FromResult(result);
+        }
+
+        [HttpPut("{id:int}/spin")]
+        [RequirePermission(PermissionCodes.Products.Update)]
+        [Consumes("multipart/form-data")]
+        [ProducesResponseType(typeof(ProductSpinDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> SaveSpin(
+            int id,
+            [FromForm] ProductSpinFormRequest request,
+            CancellationToken cancellationToken)
+        {
+            var result = await _spinService.SaveAsync(id, request, userId: null, cancellationToken);
+            return FromResult(result);
         }
 
         [HttpGet]

@@ -39,23 +39,32 @@ namespace ARCServer.Business.Dtos.Products
                     ErrorMessages.Product.InvalidJson);
             }
 
+            if (!TryDeserialize(form.KeepProductImageIds, out List<int>? keepProductImageIds, out _))
+            {
+                return ServiceResult<UpdateProductDto>.Failure(
+                    "keepProductImageIds",
+                    ErrorMessages.Product.InvalidJson);
+            }
+
             var update = new UpdateProductDto
             {
                 Code = common!.Code,
-                Size = common.Size,
-                Diameter = common.Diameter,
                 HasWarranty = common.HasWarranty,
                 IsMadeToOrder = common.IsMadeToOrder,
-                PowerAmperes = common.PowerAmperes,
                 CategoryId = common.CategoryId,
                 SubCategoryId = common.SubCategoryId,
                 Translations = common.Translations,
                 BrandIds = common.BrandIds,
+                SizeIds = common.SizeIds,
+                DiameterIds = common.DiameterIds,
+                PowerIds = common.PowerIds,
                 ManufacturerCountryIds = common.ManufacturerCountryIds,
                 ColorIds = common.ColorIds,
                 Images = common.Images,
                 ImageColorIds = common.ImageColorIds,
+                ProductImages = common.ProductImages,
                 KeepImageIds = keepImageIds ?? [],
+                KeepProductImageIds = keepProductImageIds ?? [],
             };
 
             return ServiceResult<UpdateProductDto>.Success(update);
@@ -81,6 +90,30 @@ namespace ARCServer.Business.Dtos.Products
             {
                 failure = ServiceResult<CreateProductDto>.Failure(
                     "brandIds",
+                    ErrorMessages.Product.InvalidJson);
+                return false;
+            }
+
+            if (!TryDeserialize(form.SizeIds, out List<int>? sizeIds, out _))
+            {
+                failure = ServiceResult<CreateProductDto>.Failure(
+                    "sizeIds",
+                    ErrorMessages.Product.InvalidJson);
+                return false;
+            }
+
+            if (!TryDeserialize(form.DiameterIds, out List<int>? diameterIds, out _))
+            {
+                failure = ServiceResult<CreateProductDto>.Failure(
+                    "diameterIds",
+                    ErrorMessages.Product.InvalidJson);
+                return false;
+            }
+
+            if (!TryDeserialize(form.PowerIds, out List<int>? powerIds, out _))
+            {
+                failure = ServiceResult<CreateProductDto>.Failure(
+                    "powerIds",
                     ErrorMessages.Product.InvalidJson);
                 return false;
             }
@@ -113,22 +146,27 @@ namespace ARCServer.Business.Dtos.Products
                 .Where(f => f is { Length: > 0 })
                 .ToList() ?? [];
 
+            var productImages = form.ProductImages?
+                .Where(f => f is { Length: > 0 })
+                .ToList() ?? [];
+
             dto = new CreateProductDto
             {
                 Code = form.Code?.Trim() ?? string.Empty,
-                Size = form.Size?.Trim() ?? string.Empty,
-                Diameter = form.Diameter?.Trim() ?? string.Empty,
                 HasWarranty = form.HasWarranty,
                 IsMadeToOrder = form.IsMadeToOrder,
-                PowerAmperes = form.PowerAmperes,
                 CategoryId = form.CategoryId,
                 SubCategoryId = form.SubCategoryId is > 0 ? form.SubCategoryId : null,
                 Translations = translations ?? [],
                 BrandIds = brandIds ?? [],
+                SizeIds = sizeIds ?? [],
+                DiameterIds = diameterIds ?? [],
+                PowerIds = powerIds ?? [],
                 ManufacturerCountryIds = countryIds ?? [],
                 ColorIds = colorIds ?? [],
                 Images = images,
                 ImageColorIds = imageColorIds ?? [],
+                ProductImages = productImages,
             };
 
             return true;

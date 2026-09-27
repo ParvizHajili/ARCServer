@@ -2,9 +2,13 @@ using ARCServer.Business.Services.Auth;
 using ARCServer.Business.Services.Brands;
 using ARCServer.Business.Services.Categories;
 using ARCServer.Business.Services.Colors;
+using ARCServer.Business.Services.Dashboard;
+using ARCServer.Business.Services.Diameters;
 using ARCServer.Business.Services.ManufacturerCountries;
 using ARCServer.Business.Services.Permissions;
+using ARCServer.Business.Services.Powers;
 using ARCServer.Business.Services.Products;
+using ARCServer.Business.Services.Sizes;
 using ARCServer.Business.Services.Storage;
 using ARCServer.Business.Services.Users;
 using ARCServer.Business.Settings;
@@ -35,8 +39,13 @@ namespace ARCServer.Business.Extensions
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IManufacturerCountryService, ManufacturerCountryService>();
             services.AddScoped<IBrandService, BrandService>();
+            services.AddScoped<ISizeService, SizeService>();
+            services.AddScoped<IDiameterService, DiameterService>();
+            services.AddScoped<IPowerService, PowerService>();
             services.AddScoped<IColorService, ColorService>();
             services.AddScoped<IProductService, ProductService>();
+            services.AddScoped<IProductSpinService, ProductSpinService>();
+            services.AddScoped<IDashboardService, DashboardService>();
 
             return services;
         }

@@ -4,6 +4,7 @@ using ARCServer.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ARCServer.Data.Migrations
 {
     [DbContext(typeof(ArcDbContext))]
-    partial class ArcDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260927142229_AddProductGalleryImages")]
+    partial class AddProductGalleryImages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -336,53 +339,6 @@ namespace ARCServer.Data.Migrations
                     b.ToTable("ColorTranslations", (string)null);
                 });
 
-            modelBuilder.Entity("ARCServer.Domain.Entities.Diameter", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("CreatorId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Deleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
-                    b.Property<DateTime?>("DeletedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("DeletorId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("UpdaterId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Value")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Value")
-                        .IsUnique()
-                        .HasFilter("[Deleted] = 0");
-
-                    b.HasIndex("Id", "Deleted")
-                        .IsUnique();
-
-                    b.ToTable("Diameters", (string)null);
-                });
-
             modelBuilder.Entity("ARCServer.Domain.Entities.Identity.ApplicationRole", b =>
                 {
                     b.Property<int>("Id")
@@ -680,53 +636,6 @@ namespace ARCServer.Data.Migrations
                     b.ToTable("ManufacturerCountryTranslations", (string)null);
                 });
 
-            modelBuilder.Entity("ARCServer.Domain.Entities.Power", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("CreatorId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Deleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
-                    b.Property<DateTime?>("DeletedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("DeletorId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("UpdaterId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Value")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Value")
-                        .IsUnique()
-                        .HasFilter("[Deleted] = 0");
-
-                    b.HasIndex("Id", "Deleted")
-                        .IsUnique();
-
-                    b.ToTable("Powers", (string)null);
-                });
-
             modelBuilder.Entity("ARCServer.Domain.Entities.Product", b =>
                 {
                     b.Property<int>("Id")
@@ -760,11 +669,25 @@ namespace ARCServer.Data.Migrations
                     b.Property<int?>("DeletorId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Diameter")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<bool>("HasWarranty")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsMadeToOrder")
                         .HasColumnType("bit");
+
+                    b.Property<decimal>("PowerAmperes")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<string>("Size")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.Property<int?>("SubCategoryId")
                         .HasColumnType("int");
@@ -773,9 +696,6 @@ namespace ARCServer.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<int?>("UpdaterId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ViewCount")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -896,57 +816,6 @@ namespace ARCServer.Data.Migrations
                     b.ToTable("ProductColors", (string)null);
                 });
 
-            modelBuilder.Entity("ARCServer.Domain.Entities.ProductDiameter", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("CreatorId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Deleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
-                    b.Property<DateTime?>("DeletedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("DeletorId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("DiameterId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("UpdaterId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("DiameterId");
-
-                    b.HasIndex("Id", "Deleted")
-                        .IsUnique();
-
-                    b.HasIndex("ProductId", "DiameterId")
-                        .IsUnique()
-                        .HasFilter("[Deleted] = 0");
-
-                    b.ToTable("ProductDiameters", (string)null);
-                });
-
             modelBuilder.Entity("ARCServer.Domain.Entities.ProductImage", b =>
                 {
                     b.Property<int>("Id")
@@ -1055,160 +924,6 @@ namespace ARCServer.Data.Migrations
                     b.ToTable("ProductManufacturerCountries", (string)null);
                 });
 
-            modelBuilder.Entity("ARCServer.Domain.Entities.ProductPower", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("CreatorId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Deleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
-                    b.Property<DateTime?>("DeletedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("DeletorId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PowerId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("UpdaterId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PowerId");
-
-                    b.HasIndex("Id", "Deleted")
-                        .IsUnique();
-
-                    b.HasIndex("ProductId", "PowerId")
-                        .IsUnique()
-                        .HasFilter("[Deleted] = 0");
-
-                    b.ToTable("ProductPowers", (string)null);
-                });
-
-            modelBuilder.Entity("ARCServer.Domain.Entities.ProductSize", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("CreatorId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Deleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
-                    b.Property<DateTime?>("DeletedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("DeletorId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SizeId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("UpdaterId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SizeId");
-
-                    b.HasIndex("Id", "Deleted")
-                        .IsUnique();
-
-                    b.HasIndex("ProductId", "SizeId")
-                        .IsUnique()
-                        .HasFilter("[Deleted] = 0");
-
-                    b.ToTable("ProductSizes", (string)null);
-                });
-
-            modelBuilder.Entity("ARCServer.Domain.Entities.ProductSpinImage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("CreatorId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Deleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
-                    b.Property<DateTime?>("DeletedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("DeletorId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("Order")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("UpdaterId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Id", "Deleted")
-                        .IsUnique();
-
-                    b.HasIndex("ProductId", "Order");
-
-                    b.ToTable("ProductSpinImages", (string)null);
-                });
-
             modelBuilder.Entity("ARCServer.Domain.Entities.ProductTranslation", b =>
                 {
                     b.Property<int>("Id")
@@ -1268,53 +983,6 @@ namespace ARCServer.Data.Migrations
                         .HasFilter("[Deleted] = 0");
 
                     b.ToTable("ProductTranslations", (string)null);
-                });
-
-            modelBuilder.Entity("ARCServer.Domain.Entities.Size", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("CreatorId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Deleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
-                    b.Property<DateTime?>("DeletedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("DeletorId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("UpdaterId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Value")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Value")
-                        .IsUnique()
-                        .HasFilter("[Deleted] = 0");
-
-                    b.HasIndex("Id", "Deleted")
-                        .IsUnique();
-
-                    b.ToTable("Sizes", (string)null);
                 });
 
             modelBuilder.Entity("ARCServer.Domain.Entities.SubCategory", b =>
@@ -1658,25 +1326,6 @@ namespace ARCServer.Data.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("ARCServer.Domain.Entities.ProductDiameter", b =>
-                {
-                    b.HasOne("ARCServer.Domain.Entities.Diameter", "Diameter")
-                        .WithMany()
-                        .HasForeignKey("DiameterId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ARCServer.Domain.Entities.Product", "Product")
-                        .WithMany("Diameters")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Diameter");
-
-                    b.Navigation("Product");
-                });
-
             modelBuilder.Entity("ARCServer.Domain.Entities.ProductImage", b =>
                 {
                     b.HasOne("ARCServer.Domain.Entities.ProductColor", "ProductColor")
@@ -1710,55 +1359,6 @@ namespace ARCServer.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("ManufacturerCountry");
-
-                    b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("ARCServer.Domain.Entities.ProductPower", b =>
-                {
-                    b.HasOne("ARCServer.Domain.Entities.Power", "Power")
-                        .WithMany()
-                        .HasForeignKey("PowerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ARCServer.Domain.Entities.Product", "Product")
-                        .WithMany("Powers")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Power");
-
-                    b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("ARCServer.Domain.Entities.ProductSize", b =>
-                {
-                    b.HasOne("ARCServer.Domain.Entities.Product", "Product")
-                        .WithMany("Sizes")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ARCServer.Domain.Entities.Size", "Size")
-                        .WithMany()
-                        .HasForeignKey("SizeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-
-                    b.Navigation("Size");
-                });
-
-            modelBuilder.Entity("ARCServer.Domain.Entities.ProductSpinImage", b =>
-                {
-                    b.HasOne("ARCServer.Domain.Entities.Product", "Product")
-                        .WithMany("SpinImages")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
 
                     b.Navigation("Product");
                 });
@@ -1892,17 +1492,9 @@ namespace ARCServer.Data.Migrations
 
                     b.Navigation("Colors");
 
-                    b.Navigation("Diameters");
-
                     b.Navigation("Images");
 
                     b.Navigation("ManufacturerCountries");
-
-                    b.Navigation("Powers");
-
-                    b.Navigation("Sizes");
-
-                    b.Navigation("SpinImages");
 
                     b.Navigation("Translations");
                 });

@@ -4,6 +4,7 @@ using ARCServer.Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ARCServer.Data.Migrations
 {
     [DbContext(typeof(ArcDbContext))]
-    partial class ArcDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260927163039_ReplaceMeasurementTranslationsWithValue")]
+    partial class ReplaceMeasurementTranslationsWithValue
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -775,9 +778,6 @@ namespace ARCServer.Data.Migrations
                     b.Property<int?>("UpdaterId")
                         .HasColumnType("int");
 
-                    b.Property<int>("ViewCount")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
@@ -1155,58 +1155,6 @@ namespace ARCServer.Data.Migrations
                         .HasFilter("[Deleted] = 0");
 
                     b.ToTable("ProductSizes", (string)null);
-                });
-
-            modelBuilder.Entity("ARCServer.Domain.Entities.ProductSpinImage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("CreatorId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Deleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0);
-
-                    b.Property<DateTime?>("DeletedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("DeletorId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("Order")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("UpdaterId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Id", "Deleted")
-                        .IsUnique();
-
-                    b.HasIndex("ProductId", "Order");
-
-                    b.ToTable("ProductSpinImages", (string)null);
                 });
 
             modelBuilder.Entity("ARCServer.Domain.Entities.ProductTranslation", b =>
@@ -1752,17 +1700,6 @@ namespace ARCServer.Data.Migrations
                     b.Navigation("Size");
                 });
 
-            modelBuilder.Entity("ARCServer.Domain.Entities.ProductSpinImage", b =>
-                {
-                    b.HasOne("ARCServer.Domain.Entities.Product", "Product")
-                        .WithMany("SpinImages")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
             modelBuilder.Entity("ARCServer.Domain.Entities.ProductTranslation", b =>
                 {
                     b.HasOne("ARCServer.Domain.Entities.Product", "Product")
@@ -1901,8 +1838,6 @@ namespace ARCServer.Data.Migrations
                     b.Navigation("Powers");
 
                     b.Navigation("Sizes");
-
-                    b.Navigation("SpinImages");
 
                     b.Navigation("Translations");
                 });

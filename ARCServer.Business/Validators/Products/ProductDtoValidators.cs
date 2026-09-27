@@ -80,21 +80,6 @@ namespace ARCServer.Business.Validators.Products
                 .NotEmpty()
                 .MaximumLength(100);
 
-            RuleFor(x => x.Size)
-                .NotEmpty()
-                .MaximumLength(200);
-
-            RuleFor(x => x.Diameter)
-                .NotEmpty()
-                .MaximumLength(200);
-
-            RuleFor(x => x.PowerAmperes)
-                .GreaterThan(0)
-                .WithMessage(ErrorMessages.Format(
-                    ErrorMessages.Common.GreaterThan,
-                    ErrorMessages.Fields.PowerAmperes,
-                    0));
-
             RuleFor(x => x.CategoryId)
                 .GreaterThan(0);
 
@@ -122,6 +107,30 @@ namespace ARCServer.Business.Validators.Products
                     ErrorMessages.Product.IdsUnique,
                     ErrorMessages.Fields.Brands));
 
+            RuleFor(x => x.SizeIds)
+                .NotEmpty()
+                .WithMessage(ErrorMessages.Product.SizesRequired)
+                .Must(ids => ids.Distinct().Count() == ids.Count)
+                .WithMessage(ErrorMessages.Format(
+                    ErrorMessages.Product.IdsUnique,
+                    ErrorMessages.Fields.Sizes));
+
+            RuleFor(x => x.DiameterIds)
+                .NotEmpty()
+                .WithMessage(ErrorMessages.Product.DiametersRequired)
+                .Must(ids => ids.Distinct().Count() == ids.Count)
+                .WithMessage(ErrorMessages.Format(
+                    ErrorMessages.Product.IdsUnique,
+                    ErrorMessages.Fields.Diameters));
+
+            RuleFor(x => x.PowerIds)
+                .NotEmpty()
+                .WithMessage(ErrorMessages.Product.PowersRequired)
+                .Must(ids => ids.Distinct().Count() == ids.Count)
+                .WithMessage(ErrorMessages.Format(
+                    ErrorMessages.Product.IdsUnique,
+                    ErrorMessages.Fields.Powers));
+
             RuleFor(x => x.ManufacturerCountryIds)
                 .NotEmpty()
                 .WithMessage(ErrorMessages.Product.ManufacturerCountriesRequired)
@@ -145,6 +154,10 @@ namespace ARCServer.Business.Validators.Products
             RuleFor(x => x)
                 .Must(HaveImageForEveryColor)
                 .WithMessage(ErrorMessages.Product.ColorImagesRequired);
+
+            RuleFor(x => x.ProductImages)
+                .NotEmpty()
+                .WithMessage(ErrorMessages.Product.ProductImagesRequired);
         }
 
         private static bool HaveImageForEveryColor(CreateProductDto dto)
@@ -170,21 +183,6 @@ namespace ARCServer.Business.Validators.Products
                 .NotEmpty()
                 .MaximumLength(100);
 
-            RuleFor(x => x.Size)
-                .NotEmpty()
-                .MaximumLength(200);
-
-            RuleFor(x => x.Diameter)
-                .NotEmpty()
-                .MaximumLength(200);
-
-            RuleFor(x => x.PowerAmperes)
-                .GreaterThan(0)
-                .WithMessage(ErrorMessages.Format(
-                    ErrorMessages.Common.GreaterThan,
-                    ErrorMessages.Fields.PowerAmperes,
-                    0));
-
             RuleFor(x => x.CategoryId)
                 .GreaterThan(0);
 
@@ -211,6 +209,30 @@ namespace ARCServer.Business.Validators.Products
                 .WithMessage(ErrorMessages.Format(
                     ErrorMessages.Product.IdsUnique,
                     ErrorMessages.Fields.Brands));
+
+            RuleFor(x => x.SizeIds)
+                .NotEmpty()
+                .WithMessage(ErrorMessages.Product.SizesRequired)
+                .Must(ids => ids.Distinct().Count() == ids.Count)
+                .WithMessage(ErrorMessages.Format(
+                    ErrorMessages.Product.IdsUnique,
+                    ErrorMessages.Fields.Sizes));
+
+            RuleFor(x => x.DiameterIds)
+                .NotEmpty()
+                .WithMessage(ErrorMessages.Product.DiametersRequired)
+                .Must(ids => ids.Distinct().Count() == ids.Count)
+                .WithMessage(ErrorMessages.Format(
+                    ErrorMessages.Product.IdsUnique,
+                    ErrorMessages.Fields.Diameters));
+
+            RuleFor(x => x.PowerIds)
+                .NotEmpty()
+                .WithMessage(ErrorMessages.Product.PowersRequired)
+                .Must(ids => ids.Distinct().Count() == ids.Count)
+                .WithMessage(ErrorMessages.Format(
+                    ErrorMessages.Product.IdsUnique,
+                    ErrorMessages.Fields.Powers));
 
             RuleFor(x => x.ManufacturerCountryIds)
                 .NotEmpty()

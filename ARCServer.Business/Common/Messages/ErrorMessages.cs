@@ -27,15 +27,18 @@ namespace ARCServer.Business.Common.Messages
             public const string SubCategory = "Alt kateqoriya";
             public const string ManufacturerCountry = "İstehsalçı ölkə";
             public const string Brand = "Marka";
+            public const string Size = "Ölçü";
+            public const string Diameter = "Diametr";
+            public const string Power = "Güc (amper)";
             public const string Color = "Rəng";
             public const string HexCode = "Rəng kodu";
             public const string Product = "Məhsul";
             public const string Code = "Kod";
-            public const string Size = "Ölçü";
-            public const string Diameter = "Diametr";
-            public const string PowerAmperes = "Güc (amper)";
             public const string Description = "Təsvir";
             public const string Brands = "Markalar";
+            public const string Sizes = "Ölçülər";
+            public const string Diameters = "Diametrlər";
+            public const string Powers = "Güclər";
             public const string ManufacturerCountries = "İstehsalçı ölkələr";
             public const string Colors = "Rənglər";
             public const string Id = "Id";
@@ -77,6 +80,24 @@ namespace ARCServer.Business.Common.Messages
             public const string TranslationsUnique =
                 "Marka tərcümələrində dil kodları unikaldır olmalıdır.";
             public const string NameExists = "'{0}' adı artıq mövcuddur.";
+        }
+
+        public static class Size
+        {
+            public const string NotFound = "Ölçü tapılmadı.";
+            public const string ValueExists = "'{0}' dəyəri artıq mövcuddur.";
+        }
+
+        public static class Diameter
+        {
+            public const string NotFound = "Diametr tapılmadı.";
+            public const string ValueExists = "'{0}' dəyəri artıq mövcuddur.";
+        }
+
+        public static class Power
+        {
+            public const string NotFound = "Güc tapılmadı.";
+            public const string ValueExists = "'{0}' dəyəri artıq mövcuddur.";
         }
 
         public static class Color
@@ -128,19 +149,28 @@ namespace ARCServer.Business.Common.Messages
             public const string SubCategoryInvalid =
                 "Alt kateqoriya seçilmiş kateqoriyaya aid deyil və ya tapılmadı.";
             public const string BrandNotFound = "Seçilmiş markalardan biri tapılmadı.";
+            public const string SizeNotFound = "Seçilmiş ölçülərdən biri tapılmadı.";
+            public const string DiameterNotFound = "Seçilmiş diametrlərdən biri tapılmadı.";
+            public const string PowerNotFound = "Seçilmiş güclərdən biri tapılmadı.";
             public const string ManufacturerCountryNotFound =
                 "Seçilmiş istehsalçı ölkələrdən biri tapılmadı.";
             public const string ColorNotFound = "Seçilmiş rənglərdən biri tapılmadı.";
             public const string BrandsRequired = "Ən azı bir marka seçilməlidir.";
+            public const string SizesRequired = "Ən azı bir ölçü seçilməlidir.";
+            public const string DiametersRequired = "Ən azı bir diametr seçilməlidir.";
+            public const string PowersRequired = "Ən azı bir güc seçilməlidir.";
             public const string ManufacturerCountriesRequired =
                 "Ən azı bir istehsalçı ölkə seçilməlidir.";
             public const string ColorsRequired = "Ən azı bir rəng seçilməlidir.";
             public const string ColorImagesRequired =
                 "Hər seçilmiş rəng üçün ən azı bir şəkil lazımdır.";
+            public const string ProductImagesRequired =
+                "Ən azı bir məhsul şəkli lazımdır.";
             public const string ImageColorIdsMismatch =
                 "Şəkillər və rəng id-ləri uyğun gəlmir.";
             public const string InvalidJson = "JSON formatı düzgün deyil.";
             public const string ImageUploadFailed = "Şəkil yüklənərkən xəta baş verdi.";
+            public const string InvalidSpinFrames = "360 şəkil sırası düzgün deyil.";
             public const string IdsUnique = "{0} unikaldır olmalıdır.";
         }
 

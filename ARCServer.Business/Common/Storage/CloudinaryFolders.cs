@@ -8,5 +8,7 @@ namespace ARCServer.Business.Common.Storage
         public const string Categories = "category";
 
         public const string Products = "product";
+
+        public const string ProductSpins = "product-spin";
     }
 }

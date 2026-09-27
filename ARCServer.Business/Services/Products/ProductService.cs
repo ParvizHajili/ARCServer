@@ -17,12 +17,19 @@ namespace ARCServer.Business.Services.Products
         private readonly IRepository<Product> _productRepository;
         private readonly IRepository<ProductTranslation> _translationRepository;
         private readonly IRepository<ProductBrand> _productBrandRepository;
+        private readonly IRepository<ProductSize> _productSizeRepository;
+        private readonly IRepository<ProductDiameter> _productDiameterRepository;
+        private readonly IRepository<ProductPower> _productPowerRepository;
         private readonly IRepository<ProductManufacturerCountry> _productCountryRepository;
         private readonly IRepository<ProductColor> _productColorRepository;
         private readonly IRepository<ProductImage> _productImageRepository;
+        private readonly IRepository<ProductSpinImage> _productSpinRepository;
         private readonly IRepository<Category> _categoryRepository;
         private readonly IRepository<SubCategory> _subCategoryRepository;
         private readonly IRepository<Brand> _brandRepository;
+        private readonly IRepository<Size> _sizeRepository;
+        private readonly IRepository<Diameter> _diameterRepository;
+        private readonly IRepository<Power> _powerRepository;
         private readonly IRepository<ManufacturerCountry> _countryRepository;
         private readonly IRepository<Color> _colorRepository;
         private readonly IUnitOfWork _unitOfWork;
@@ -35,12 +42,19 @@ namespace ARCServer.Business.Services.Products
             IRepository<Product> productRepository,
             IRepository<ProductTranslation> translationRepository,
             IRepository<ProductBrand> productBrandRepository,
+            IRepository<ProductSize> productSizeRepository,
+            IRepository<ProductDiameter> productDiameterRepository,
+            IRepository<ProductPower> productPowerRepository,
             IRepository<ProductManufacturerCountry> productCountryRepository,
             IRepository<ProductColor> productColorRepository,
             IRepository<ProductImage> productImageRepository,
+            IRepository<ProductSpinImage> productSpinRepository,
             IRepository<Category> categoryRepository,
             IRepository<SubCategory> subCategoryRepository,
             IRepository<Brand> brandRepository,
+            IRepository<Size> sizeRepository,
+            IRepository<Diameter> diameterRepository,
+            IRepository<Power> powerRepository,
             IRepository<ManufacturerCountry> countryRepository,
             IRepository<Color> colorRepository,
             IUnitOfWork unitOfWork,
@@ -52,12 +66,19 @@ namespace ARCServer.Business.Services.Products
             _productRepository = productRepository;
             _translationRepository = translationRepository;
             _productBrandRepository = productBrandRepository;
+            _productSizeRepository = productSizeRepository;
+            _productDiameterRepository = productDiameterRepository;
+            _productPowerRepository = productPowerRepository;
             _productCountryRepository = productCountryRepository;
             _productColorRepository = productColorRepository;
             _productImageRepository = productImageRepository;
+            _productSpinRepository = productSpinRepository;
             _categoryRepository = categoryRepository;
             _subCategoryRepository = subCategoryRepository;
             _brandRepository = brandRepository;
+            _sizeRepository = sizeRepository;
+            _diameterRepository = diameterRepository;
+            _powerRepository = powerRepository;
             _countryRepository = countryRepository;
             _colorRepository = colorRepository;
             _unitOfWork = unitOfWork;
@@ -94,9 +115,11 @@ namespace ARCServer.Business.Services.Products
             }
 
             List<(int ColorId, string Url)> uploaded;
+            List<string> productImageUrls;
             try
             {
                 uploaded = await UploadImagesAsync(dto.Images, dto.ImageColorIds, cancellationToken);
+                productImageUrls = await UploadFilesAsync(dto.ProductImages, cancellationToken);
             }
             catch (Exception)
             {
@@ -109,11 +132,8 @@ namespace ARCServer.Business.Services.Products
             var product = new Product
             {
                 Code = dto.Code.Trim(),
-                Size = dto.Size.Trim(),
-                Diameter = dto.Diameter.Trim(),
                 HasWarranty = dto.HasWarranty,
                 IsMadeToOrder = dto.IsMadeToOrder,
-                PowerAmperes = dto.PowerAmperes,
                 CategoryId = dto.CategoryId,
                 SubCategoryId = dto.SubCategoryId,
                 CreateDate = now,
@@ -131,6 +151,39 @@ namespace ARCServer.Business.Services.Products
                 product.Brands.Add(new ProductBrand
                 {
                     BrandId = brandId,
+                    CreateDate = now,
+                    CreatorId = creatorId,
+                    Deleted = 0,
+                });
+            }
+
+            foreach (var sizeId in dto.SizeIds.Distinct())
+            {
+                product.Sizes.Add(new ProductSize
+                {
+                    SizeId = sizeId,
+                    CreateDate = now,
+                    CreatorId = creatorId,
+                    Deleted = 0,
+                });
+            }
+
+            foreach (var diameterId in dto.DiameterIds.Distinct())
+            {
+                product.Diameters.Add(new ProductDiameter
+                {
+                    DiameterId = diameterId,
+                    CreateDate = now,
+                    CreatorId = creatorId,
+                    Deleted = 0,
+                });
+            }
+
+            foreach (var powerId in dto.PowerIds.Distinct())
+            {
+                product.Powers.Add(new ProductPower
+                {
+                    PowerId = powerId,
                     CreateDate = now,
                     CreatorId = creatorId,
                     Deleted = 0,
@@ -165,17 +218,33 @@ namespace ARCServer.Business.Services.Products
                 var order = 1;
                 foreach (var url in imagesByColor.GetValueOrDefault(colorId) ?? [])
                 {
-                    productColor.Images.Add(new ProductImage
+                    var image = new ProductImage
                     {
+                        Product = product,
                         ImageUrl = url,
                         Order = order++,
                         CreateDate = now,
                         CreatorId = creatorId,
                         Deleted = 0,
-                    });
+                    };
+                    productColor.Images.Add(image);
+                    product.Images.Add(image);
                 }
 
                 product.Colors.Add(productColor);
+            }
+
+            var galleryOrder = 1;
+            foreach (var url in productImageUrls)
+            {
+                product.Images.Add(new ProductImage
+                {
+                    ImageUrl = url,
+                    Order = galleryOrder++,
+                    CreateDate = now,
+                    CreatorId = creatorId,
+                    Deleted = 0,
+                });
             }
 
             await _productRepository.AddAsync(product, cancellationToken);
@@ -254,10 +323,31 @@ namespace ARCServer.Business.Services.Products
                 }
             }
 
+            var existingGallery = GalleryImages(product).ToDictionary(i => i.Id);
+            var keepProductIds = dto.KeepProductImageIds.Distinct().ToHashSet();
+            foreach (var keepId in keepProductIds)
+            {
+                if (!existingGallery.ContainsKey(keepId))
+                {
+                    return ServiceResult<ProductDetailDto>.Failure(
+                        "keepProductImageIds",
+                        ErrorMessages.Format(ErrorMessages.Common.NotFound, ErrorMessages.Fields.Image));
+                }
+            }
+
+            if (keepProductIds.Count + dto.ProductImages.Count < 1)
+            {
+                return ServiceResult<ProductDetailDto>.Failure(
+                    "productImages",
+                    ErrorMessages.Product.ProductImagesRequired);
+            }
+
             List<(int ColorId, string Url)> uploaded;
+            List<string> productImageUrls;
             try
             {
                 uploaded = await UploadImagesAsync(dto.Images, dto.ImageColorIds, cancellationToken);
+                productImageUrls = await UploadFilesAsync(dto.ProductImages, cancellationToken);
             }
             catch (Exception)
             {
@@ -268,11 +358,8 @@ namespace ARCServer.Business.Services.Products
 
             var now = DateTime.UtcNow;
             product.Code = dto.Code.Trim();
-            product.Size = dto.Size.Trim();
-            product.Diameter = dto.Diameter.Trim();
             product.HasWarranty = dto.HasWarranty;
             product.IsMadeToOrder = dto.IsMadeToOrder;
-            product.PowerAmperes = dto.PowerAmperes;
             product.CategoryId = dto.CategoryId;
             product.SubCategoryId = dto.SubCategoryId;
             product.UpdatedDate = now;
@@ -280,8 +367,12 @@ namespace ARCServer.Business.Services.Products
 
             UpsertTranslations(product, dto.Translations, now, updaterId);
             UpsertBrands(product, dto.BrandIds, now, updaterId);
+            UpsertSizes(product, dto.SizeIds, now, updaterId);
+            UpsertDiameters(product, dto.DiameterIds, now, updaterId);
+            UpsertPowers(product, dto.PowerIds, now, updaterId);
             UpsertCountries(product, dto.ManufacturerCountryIds, now, updaterId);
             UpsertColorsAndImages(product, dto.ColorIds, keepIds, uploaded, now, updaterId);
+            UpsertProductImages(product, keepProductIds, productImageUrls, now, updaterId);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -322,15 +413,21 @@ namespace ARCServer.Business.Services.Products
                 .Include(p => p.Category).ThenInclude(c => c.Translations)
                 .Include(p => p.SubCategory)
                 .ThenInclude(s => s!.Translations)
+                .Include(p => p.Powers).ThenInclude(x => x.Power)
                 .AsQueryable();
 
             var search = request.NormalizedSearch;
             if (search is not null)
             {
-                query = query.Where(p =>
-                    p.Code.ToLower().Contains(search.ToLower())
-                    || p.Translations.Any(t =>
-                        t.Deleted == 0 && t.Name.ToLower().Contains(search.ToLower())));
+                var term = search.ToLower();
+                query = request.SearchNameOnly
+                    ? query.Where(p =>
+                        p.Translations.Any(t =>
+                            t.Deleted == 0 && t.Name.ToLower().Contains(term)))
+                    : query.Where(p =>
+                        p.Code.ToLower().Contains(term)
+                        || p.Translations.Any(t =>
+                            t.Deleted == 0 && t.Name.ToLower().Contains(term)));
             }
 
             query = ApplySort(query, request);
@@ -372,6 +469,21 @@ namespace ARCServer.Business.Services.Products
                 _productBrandRepository.SoftDelete(brand, deletorId);
             }
 
+            foreach (var size in product.Sizes.Where(x => x.Deleted == 0).ToList())
+            {
+                _productSizeRepository.SoftDelete(size, deletorId);
+            }
+
+            foreach (var diameter in product.Diameters.Where(x => x.Deleted == 0).ToList())
+            {
+                _productDiameterRepository.SoftDelete(diameter, deletorId);
+            }
+
+            foreach (var power in product.Powers.Where(x => x.Deleted == 0).ToList())
+            {
+                _productPowerRepository.SoftDelete(power, deletorId);
+            }
+
             foreach (var country in product.ManufacturerCountries.Where(x => x.Deleted == 0).ToList())
             {
                 _productCountryRepository.SoftDelete(country, deletorId);
@@ -385,6 +497,16 @@ namespace ARCServer.Business.Services.Products
                 }
 
                 _productColorRepository.SoftDelete(color, deletorId);
+            }
+
+            foreach (var image in GalleryImages(product).ToList())
+            {
+                _productImageRepository.SoftDelete(image, deletorId);
+            }
+
+            foreach (var image in product.SpinImages.Where(i => i.Deleted == 0).ToList())
+            {
+                _productSpinRepository.SoftDelete(image, deletorId);
             }
 
             _productRepository.SoftDelete(product, deletorId);
@@ -427,6 +549,33 @@ namespace ARCServer.Business.Services.Products
                 return ServiceResult<ProductDetailDto>.Failure(
                     "brandIds",
                     ErrorMessages.Product.BrandNotFound);
+            }
+
+            var sizeCount = await _sizeRepository.Query()
+                .CountAsync(s => dto.SizeIds.Contains(s.Id), cancellationToken);
+            if (sizeCount != dto.SizeIds.Distinct().Count())
+            {
+                return ServiceResult<ProductDetailDto>.Failure(
+                    "sizeIds",
+                    ErrorMessages.Product.SizeNotFound);
+            }
+
+            var diameterCount = await _diameterRepository.Query()
+                .CountAsync(d => dto.DiameterIds.Contains(d.Id), cancellationToken);
+            if (diameterCount != dto.DiameterIds.Distinct().Count())
+            {
+                return ServiceResult<ProductDetailDto>.Failure(
+                    "diameterIds",
+                    ErrorMessages.Product.DiameterNotFound);
+            }
+
+            var powerCount = await _powerRepository.Query()
+                .CountAsync(p => dto.PowerIds.Contains(p.Id), cancellationToken);
+            if (powerCount != dto.PowerIds.Distinct().Count())
+            {
+                return ServiceResult<ProductDetailDto>.Failure(
+                    "powerIds",
+                    ErrorMessages.Product.PowerNotFound);
             }
 
             var countryCount = await _countryRepository.Query()
@@ -500,6 +649,23 @@ namespace ARCServer.Business.Services.Products
             return result;
         }
 
+        private async Task<List<string>> UploadFilesAsync(
+            List<IFormFile> images,
+            CancellationToken cancellationToken)
+        {
+            var result = new List<string>();
+            foreach (var file in images)
+            {
+                var url = await _cloudinaryService.UploadAsync(
+                    file,
+                    CloudinaryFolders.Products,
+                    cancellationToken);
+                result.Add(url);
+            }
+
+            return result;
+        }
+
         private async Task<Product?> GetTrackedDetailAsync(
             int id,
             CancellationToken cancellationToken,
@@ -511,11 +677,16 @@ namespace ARCServer.Business.Services.Products
                 .Include(p => p.SubCategory)
                 .ThenInclude(s => s!.Translations)
                 .Include(p => p.Brands).ThenInclude(b => b.Brand).ThenInclude(b => b.Translations)
+                .Include(p => p.Sizes).ThenInclude(s => s.Size)
+                .Include(p => p.Diameters).ThenInclude(d => d.Diameter)
+                .Include(p => p.Powers).ThenInclude(pw => pw.Power)
                 .Include(p => p.ManufacturerCountries)
                     .ThenInclude(m => m.ManufacturerCountry)
                     .ThenInclude(c => c.Translations)
                 .Include(p => p.Colors).ThenInclude(c => c.Color).ThenInclude(c => c.Translations)
                 .Include(p => p.Colors).ThenInclude(c => c.Images)
+                .Include(p => p.Images)
+                .Include(p => p.SpinImages)
                 .Where(p => p.Id == id);
 
             if (asNoTracking)
@@ -593,6 +764,123 @@ namespace ARCServer.Business.Services.Products
                 product.Brands.Add(new ProductBrand
                 {
                     BrandId = brandId,
+                    CreateDate = now,
+                    CreatorId = userId,
+                    Deleted = 0,
+                });
+            }
+        }
+
+        private void UpsertSizes(Product product, List<int> sizeIds, DateTime now, int? userId)
+        {
+            var incoming = sizeIds.Distinct().ToHashSet();
+            foreach (var existing in product.Sizes.Where(x => x.Deleted == 0).ToList())
+            {
+                if (!incoming.Contains(existing.SizeId))
+                {
+                    _productSizeRepository.SoftDelete(existing, userId);
+                }
+            }
+
+            foreach (var sizeId in incoming)
+            {
+                if (product.Sizes.Any(x => x.SizeId == sizeId && x.Deleted == 0))
+                {
+                    continue;
+                }
+
+                var softDeleted = product.Sizes.FirstOrDefault(x => x.SizeId == sizeId);
+                if (softDeleted is not null)
+                {
+                    softDeleted.Deleted = 0;
+                    softDeleted.DeletedDate = null;
+                    softDeleted.DeletorId = null;
+                    softDeleted.UpdatedDate = now;
+                    softDeleted.UpdaterId = userId;
+                    continue;
+                }
+
+                product.Sizes.Add(new ProductSize
+                {
+                    SizeId = sizeId,
+                    CreateDate = now,
+                    CreatorId = userId,
+                    Deleted = 0,
+                });
+            }
+        }
+
+        private void UpsertDiameters(Product product, List<int> diameterIds, DateTime now, int? userId)
+        {
+            var incoming = diameterIds.Distinct().ToHashSet();
+            foreach (var existing in product.Diameters.Where(x => x.Deleted == 0).ToList())
+            {
+                if (!incoming.Contains(existing.DiameterId))
+                {
+                    _productDiameterRepository.SoftDelete(existing, userId);
+                }
+            }
+
+            foreach (var diameterId in incoming)
+            {
+                if (product.Diameters.Any(x => x.DiameterId == diameterId && x.Deleted == 0))
+                {
+                    continue;
+                }
+
+                var softDeleted = product.Diameters.FirstOrDefault(x => x.DiameterId == diameterId);
+                if (softDeleted is not null)
+                {
+                    softDeleted.Deleted = 0;
+                    softDeleted.DeletedDate = null;
+                    softDeleted.DeletorId = null;
+                    softDeleted.UpdatedDate = now;
+                    softDeleted.UpdaterId = userId;
+                    continue;
+                }
+
+                product.Diameters.Add(new ProductDiameter
+                {
+                    DiameterId = diameterId,
+                    CreateDate = now,
+                    CreatorId = userId,
+                    Deleted = 0,
+                });
+            }
+        }
+
+        private void UpsertPowers(Product product, List<int> powerIds, DateTime now, int? userId)
+        {
+            var incoming = powerIds.Distinct().ToHashSet();
+            foreach (var existing in product.Powers.Where(x => x.Deleted == 0).ToList())
+            {
+                if (!incoming.Contains(existing.PowerId))
+                {
+                    _productPowerRepository.SoftDelete(existing, userId);
+                }
+            }
+
+            foreach (var powerId in incoming)
+            {
+                if (product.Powers.Any(x => x.PowerId == powerId && x.Deleted == 0))
+                {
+                    continue;
+                }
+
+                var softDeleted = product.Powers.FirstOrDefault(x => x.PowerId == powerId);
+                if (softDeleted is not null)
+                {
+                    softDeleted.Deleted = 0;
+                    softDeleted.DeletedDate = null;
+                    softDeleted.DeletorId = null;
+                    softDeleted.UpdatedDate = now;
+                    softDeleted.UpdaterId = userId;
+                    continue;
+                }
+
+                product.Powers.Add(new ProductPower
+                {
+                    PowerId = powerId,
                     CreateDate = now,
                     CreatorId = userId,
                     Deleted = 0,
@@ -708,16 +996,60 @@ namespace ARCServer.Business.Services.Products
 
                 foreach (var (_, url) in uploaded.Where(u => u.ColorId == colorId))
                 {
-                    productColor.Images.Add(new ProductImage
+                    var image = new ProductImage
                     {
+                        ProductId = product.Id,
                         ImageUrl = url,
                         Order = nextOrder++,
                         CreateDate = now,
                         CreatorId = userId,
                         Deleted = 0,
-                    });
+                    };
+                    productColor.Images.Add(image);
+                    product.Images.Add(image);
                 }
             }
+        }
+
+        private void UpsertProductImages(
+            Product product,
+            HashSet<int> keepImageIds,
+            List<string> uploadedUrls,
+            DateTime now,
+            int? userId)
+        {
+            foreach (var image in GalleryImages(product).ToList())
+            {
+                if (!keepImageIds.Contains(image.Id))
+                {
+                    _productImageRepository.SoftDelete(image, userId);
+                }
+            }
+
+            var nextOrder = GalleryImages(product)
+                .Where(i => keepImageIds.Contains(i.Id))
+                .Select(i => i.Order)
+                .DefaultIfEmpty(0)
+                .Max() + 1;
+
+            foreach (var url in uploadedUrls)
+            {
+                product.Images.Add(new ProductImage
+                {
+                    ProductId = product.Id,
+                    ImageUrl = url,
+                    Order = nextOrder++,
+                    CreateDate = now,
+                    CreatorId = userId,
+                    Deleted = 0,
+                });
+            }
+        }
+
+        private static IEnumerable<ProductImage> GalleryImages(Product product)
+        {
+            return product.Images.Where(i =>
+                i.Deleted == 0 && i.ProductColorId == null && i.ProductColor == null);
         }
 
         private static ProductTranslation MapTranslation(
@@ -796,11 +1128,8 @@ namespace ARCServer.Business.Services.Products
             {
                 Id = product.Id,
                 Code = product.Code,
-                Size = product.Size,
-                Diameter = product.Diameter,
                 HasWarranty = product.HasWarranty,
                 IsMadeToOrder = product.IsMadeToOrder,
-                PowerAmperes = product.PowerAmperes,
                 CategoryId = product.CategoryId,
                 CategoryName = NameFromTranslations(product.Category.Translations),
                 SubCategoryId = product.SubCategoryId,
@@ -826,6 +1155,18 @@ namespace ARCServer.Business.Services.Products
                     })
                     .OrderBy(b => b.Name)
                     .ToList(),
+                Sizes = MapNamedRefs(
+                    product.Sizes.Where(x => x.Deleted == 0),
+                    x => x.SizeId,
+                    x => FormatDecimal(x.Size.Value)),
+                Diameters = MapNamedRefs(
+                    product.Diameters.Where(x => x.Deleted == 0),
+                    x => x.DiameterId,
+                    x => FormatDecimal(x.Diameter.Value)),
+                Powers = MapNamedRefs(
+                    product.Powers.Where(x => x.Deleted == 0),
+                    x => x.PowerId,
+                    x => FormatDecimal(x.Power.Value)),
                 ManufacturerCountries = product.ManufacturerCountries
                     .Where(m => m.Deleted == 0)
                     .Select(m => new ProductNamedRefDto
@@ -834,6 +1175,15 @@ namespace ARCServer.Business.Services.Products
                         Name = NameFromTranslations(m.ManufacturerCountry.Translations),
                     })
                     .OrderBy(m => m.Name)
+                    .ToList(),
+                Images = GalleryImages(product)
+                    .OrderBy(i => i.Order)
+                    .Select(i => new ProductImageDetailDto
+                    {
+                        Id = i.Id,
+                        ImageUrl = i.ImageUrl,
+                        Order = i.Order,
+                    })
                     .ToList(),
                 Colors = product.Colors
                     .Where(c => c.Deleted == 0)
@@ -858,6 +1208,24 @@ namespace ARCServer.Business.Services.Products
             };
         }
 
+        private static string FormatDecimal(decimal value) =>
+            value.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
+
+        private static List<ProductNamedRefDto> MapNamedRefs<T>(
+            IEnumerable<T> items,
+            Func<T, int> idSelector,
+            Func<T, string> nameSelector)
+        {
+            return items
+                .Select(item => new ProductNamedRefDto
+                {
+                    Id = idSelector(item),
+                    Name = nameSelector(item),
+                })
+                .OrderBy(x => x.Name)
+                .ToList();
+        }
+
         private static ProductListItemDto MapListItem(Product product)
         {
             return new ProductListItemDto
@@ -873,7 +1241,13 @@ namespace ARCServer.Business.Services.Products
                 SubCategoryName = product.SubCategory is null
                     ? null
                     : NameFromTranslations(product.SubCategory.Translations),
-                PowerAmperes = product.PowerAmperes,
+                Powers = string.Join(
+                    ", ",
+                    product.Powers
+                        .Where(x => x.Deleted == 0)
+                        .Select(x => FormatDecimal(x.Power.Value))
+                        .Where(name => name.Length > 0)
+                        .OrderBy(name => name)),
                 HasWarranty = product.HasWarranty,
                 IsMadeToOrder = product.IsMadeToOrder,
             };
