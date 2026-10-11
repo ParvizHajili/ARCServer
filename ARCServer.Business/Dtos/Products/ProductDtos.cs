@@ -121,6 +121,8 @@ namespace ARCServer.Business.Dtos.Products
         public List<ProductImageDetailDto> Images { get; set; } = [];
 
         public List<ProductColorDetailDto> Colors { get; set; } = [];
+
+        public bool HasSpin { get; set; }
     }
 
     public class ProductListItemDto

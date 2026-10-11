@@ -21,7 +21,6 @@ namespace ARCServer.Areas.Dashboard.Controllers
         }
 
         [HttpPost("login")]
-        [AllowAnonymous]
         [ProducesResponseType(typeof(LoginResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Login(

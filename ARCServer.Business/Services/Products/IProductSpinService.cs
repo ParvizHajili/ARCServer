@@ -9,6 +9,10 @@ namespace ARCServer.Business.Services.Products
             int productId,
             CancellationToken cancellationToken = default);
 
+        Task<ServiceResult<List<ProductSpinImageDto>>> GetPublicFramesAsync(
+            int productId,
+            CancellationToken cancellationToken = default);
+
         Task<ServiceResult<ProductSpinDto>> SaveAsync(
             int productId,
             ProductSpinFormRequest request,

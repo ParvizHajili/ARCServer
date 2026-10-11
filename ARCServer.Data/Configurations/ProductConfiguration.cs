@@ -18,6 +18,14 @@ namespace ARCServer.Data.Configurations
                 .IsUnique()
                 .HasFilter("[Deleted] = 0");
 
+            // Storefront catalog filters / paging
+            builder.HasIndex(x => new { x.CategoryId, x.Id });
+            builder.HasIndex(x => new { x.SubCategoryId, x.Id });
+            builder.HasIndex(x => new { x.HasWarranty, x.Id });
+            builder.HasIndex(x => new { x.IsMadeToOrder, x.Id });
+            builder.Property(x => x.IsHomePageProduct).HasDefaultValue(false);
+            builder.HasIndex(x => x.IsHomePageProduct);
+
             builder.HasOne(x => x.Category)
                 .WithMany()
                 .HasForeignKey(x => x.CategoryId)

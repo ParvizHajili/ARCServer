@@ -13,6 +13,9 @@ namespace ARCServer.Data.Configurations
             builder.Property(x => x.ImageUrl)
                 .HasMaxLength(500)
                 .IsRequired();
+
+            // First gallery image lookup for catalog cards
+            builder.HasIndex(x => new { x.ProductId, x.ProductColorId, x.Order });
         }
     }
 }

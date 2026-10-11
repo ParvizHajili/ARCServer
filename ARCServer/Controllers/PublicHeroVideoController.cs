@@ -1,12 +1,10 @@
 using ARCServer.Business.Services.HeroVideos;
 using ARCServer.Controllers.Base;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ARCServer.Controllers
 {
     [ApiController]
-    [AllowAnonymous]
     [Route("api/hero-video")]
     public class PublicHeroVideoController : ApiControllerBase
     {

@@ -1,5 +1,6 @@
 using ARCServer.Business.Services.Auth;
 using ARCServer.Business.Services.Brands;
+using ARCServer.Business.Services.Catalog;
 using ARCServer.Business.Services.Categories;
 using ARCServer.Business.Services.Colors;
 using ARCServer.Business.Services.Dashboard;
@@ -46,6 +47,7 @@ namespace ARCServer.Business.Extensions
             services.AddScoped<IColorService, ColorService>();
             services.AddScoped<IProductService, ProductService>();
             services.AddScoped<IProductSpinService, ProductSpinService>();
+            services.AddScoped<ICatalogFilterService, CatalogFilterService>();
             services.AddScoped<IDashboardService, DashboardService>();
             services.AddScoped<IHeroVideoService, HeroVideoService>();
 

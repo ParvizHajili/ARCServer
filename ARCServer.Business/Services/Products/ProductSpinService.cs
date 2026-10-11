@@ -42,6 +42,34 @@ namespace ARCServer.Business.Services.Products
             return ServiceResult<ProductSpinDto>.Success(Map(product));
         }
 
+        public async Task<ServiceResult<List<ProductSpinImageDto>>> GetPublicFramesAsync(
+            int productId,
+            CancellationToken cancellationToken = default)
+        {
+            var exists = await _productRepository.Query()
+                .AnyAsync(p => p.Id == productId, cancellationToken);
+            if (!exists)
+            {
+                return ServiceResult<List<ProductSpinImageDto>>.NotFound(
+                    "id",
+                    ErrorMessages.Product.NotFound);
+            }
+
+            var images = await _spinRepository.Query()
+                .AsNoTracking()
+                .Where(i => i.ProductId == productId)
+                .OrderBy(i => i.Order)
+                .Select(i => new ProductSpinImageDto
+                {
+                    Id = i.Id,
+                    ImageUrl = i.ImageUrl,
+                    Order = i.Order,
+                })
+                .ToListAsync(cancellationToken);
+
+            return ServiceResult<List<ProductSpinImageDto>>.Success(images);
+        }
+
         public async Task<ServiceResult<ProductSpinDto>> SaveAsync(
             int productId,
             ProductSpinFormRequest request,

@@ -172,6 +172,9 @@ namespace ARCServer.Business.Common.Messages
             public const string ImageUploadFailed = "Şəkil yüklənərkən xəta baş verdi.";
             public const string InvalidSpinFrames = "360 şəkil sırası düzgün deyil.";
             public const string IdsUnique = "{0} unikaldır olmalıdır.";
+            public const string HomeProductLimit = "Ən çox 8 məhsul seçilə bilər.";
+            public const string HomeProductNotFound = "Seçilmiş məhsullardan biri tapılmadı.";
+            public const string HomeProductIdsUnique = "Məhsul id-ləri unikaldır olmalıdır.";
         }
 
         public static string Format(string template, params object[] args) =>

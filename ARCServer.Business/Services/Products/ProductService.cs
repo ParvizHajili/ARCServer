@@ -1,4 +1,5 @@
 using ARCServer.Business.Common;
+using ARCServer.Business.Common.Localization;
 using ARCServer.Business.Common.Messages;
 using ARCServer.Business.Common.Storage;
 using ARCServer.Business.Dtos.Common;
@@ -250,8 +251,7 @@ namespace ARCServer.Business.Services.Products
             await _productRepository.AddAsync(product, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            var created = await GetTrackedDetailAsync(product.Id, cancellationToken);
-            return ServiceResult<ProductDetailDto>.Success(MapDetail(created!));
+            return await GetPublicDetailAsync(product.Id, null, cancellationToken);
         }
 
         public async Task<ServiceResult<ProductDetailDto>> UpdateAsync(
@@ -376,21 +376,229 @@ namespace ARCServer.Business.Services.Products
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            var refreshed = await GetTrackedDetailAsync(id, cancellationToken);
-            return ServiceResult<ProductDetailDto>.Success(MapDetail(refreshed!));
+            return await GetPublicDetailAsync(id, null, cancellationToken);
         }
 
-        public async Task<ServiceResult<ProductDetailDto>> GetByIdAsync(
+        public Task<ServiceResult<ProductDetailDto>> GetByIdAsync(
             int id,
+            CancellationToken cancellationToken = default) =>
+            GetPublicDetailAsync(id, null, cancellationToken);
+
+        public async Task<ServiceResult<ProductDetailDto>> GetPublicDetailAsync(
+            int id,
+            string? lang,
             CancellationToken cancellationToken = default)
         {
-            var product = await GetTrackedDetailAsync(id, cancellationToken, asNoTracking: true);
+            var preferred = TranslationExtensions.NormalizeLanguageCode(lang);
+
+            var product = await _productRepository.Query()
+                .AsNoTracking()
+                .Where(p => p.Id == id)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Code,
+                    p.HasWarranty,
+                    p.IsMadeToOrder,
+                    p.CategoryId,
+                    p.SubCategoryId,
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+
             if (product is null)
             {
                 return ServiceResult<ProductDetailDto>.NotFound("id", ErrorMessages.Product.NotFound);
             }
 
-            return ServiceResult<ProductDetailDto>.Success(MapDetail(product));
+            var translations = await _translationRepository.Query()
+                .AsNoTracking()
+                .Where(t => t.ProductId == id)
+                .Select(t => new ProductTranslationResultDto
+                {
+                    LanguageCode = t.LanguageCode,
+                    Name = t.Name,
+                    Description = t.Description,
+                })
+                .ToListAsync(cancellationToken);
+
+            var categoryNames = await _categoryRepository.Query()
+                .AsNoTracking()
+                .Where(c => c.Id == product.CategoryId)
+                .SelectMany(c => c.Translations.Select(t => new { t.LanguageCode, t.Name }))
+                .ToListAsync(cancellationToken);
+
+            List<(string LanguageCode, string Name)>? subCategoryNames = null;
+            if (product.SubCategoryId is int subCategoryId)
+            {
+                var subRows = await _subCategoryRepository.Query()
+                    .AsNoTracking()
+                    .Where(s => s.Id == subCategoryId)
+                    .SelectMany(s => s.Translations.Select(t => new { t.LanguageCode, t.Name }))
+                    .ToListAsync(cancellationToken);
+                subCategoryNames = subRows.Select(t => (t.LanguageCode, t.Name)).ToList();
+            }
+
+            var brands = await _productBrandRepository.Query()
+                .AsNoTracking()
+                .Where(b => b.ProductId == id)
+                .Select(b => new
+                {
+                    b.BrandId,
+                    Names = b.Brand.Translations
+                        .Select(t => new { t.LanguageCode, t.Name })
+                        .ToList(),
+                })
+                .ToListAsync(cancellationToken);
+
+            var sizes = await _productSizeRepository.Query()
+                .AsNoTracking()
+                .Where(s => s.ProductId == id)
+                .Select(s => new { s.SizeId, s.Size.Value })
+                .ToListAsync(cancellationToken);
+
+            var diameters = await _productDiameterRepository.Query()
+                .AsNoTracking()
+                .Where(d => d.ProductId == id)
+                .Select(d => new { d.DiameterId, d.Diameter.Value })
+                .ToListAsync(cancellationToken);
+
+            var powers = await _productPowerRepository.Query()
+                .AsNoTracking()
+                .Where(p => p.ProductId == id)
+                .Select(p => new { p.PowerId, p.Power.Value })
+                .ToListAsync(cancellationToken);
+
+            var countries = await _productCountryRepository.Query()
+                .AsNoTracking()
+                .Where(m => m.ProductId == id)
+                .Select(m => new
+                {
+                    m.ManufacturerCountryId,
+                    Names = m.ManufacturerCountry.Translations
+                        .Select(t => new { t.LanguageCode, t.Name })
+                        .ToList(),
+                })
+                .ToListAsync(cancellationToken);
+
+            var colors = await _productColorRepository.Query()
+                .AsNoTracking()
+                .Where(c => c.ProductId == id)
+                .Select(c => new
+                {
+                    c.Id,
+                    c.ColorId,
+                    c.Color.HexCode,
+                    Names = c.Color.Translations
+                        .Select(t => new { t.LanguageCode, t.Name })
+                        .ToList(),
+                })
+                .ToListAsync(cancellationToken);
+
+            var images = await _productImageRepository.Query()
+                .AsNoTracking()
+                .Where(i => i.ProductId == id)
+                .Select(i => new
+                {
+                    i.Id,
+                    i.ImageUrl,
+                    i.Order,
+                    i.ProductColorId,
+                })
+                .ToListAsync(cancellationToken);
+
+            var colorIds = colors.Select(c => c.Id).ToHashSet();
+            var detail = new ProductDetailDto
+            {
+                Id = product.Id,
+                Code = product.Code,
+                HasWarranty = product.HasWarranty,
+                IsMadeToOrder = product.IsMadeToOrder,
+                CategoryId = product.CategoryId,
+                CategoryName = categoryNames
+                    .Select(t => (t.LanguageCode, t.Name))
+                    .ResolveTranslatedName(preferred),
+                SubCategoryId = product.SubCategoryId,
+                SubCategoryName = subCategoryNames is null
+                    ? null
+                    : subCategoryNames.ResolveTranslatedName(preferred),
+                Translations = translations
+                    .OrderBy(t => t.LanguageCode)
+                    .ToList(),
+                Brands = brands
+                    .Select(b => new ProductNamedRefDto
+                    {
+                        Id = b.BrandId,
+                        Name = b.Names.Select(t => (t.LanguageCode, t.Name)).ResolveTranslatedName(preferred),
+                    })
+                    .OrderBy(b => b.Name)
+                    .ToList(),
+                Sizes = sizes
+                    .Select(s => new ProductNamedRefDto
+                    {
+                        Id = s.SizeId,
+                        Name = FormatDecimal(s.Value),
+                    })
+                    .OrderBy(s => s.Name)
+                    .ToList(),
+                Diameters = diameters
+                    .Select(d => new ProductNamedRefDto
+                    {
+                        Id = d.DiameterId,
+                        Name = FormatDecimal(d.Value),
+                    })
+                    .OrderBy(d => d.Name)
+                    .ToList(),
+                Powers = powers
+                    .Select(p => new ProductNamedRefDto
+                    {
+                        Id = p.PowerId,
+                        Name = FormatDecimal(p.Value),
+                    })
+                    .OrderBy(p => p.Name)
+                    .ToList(),
+                ManufacturerCountries = countries
+                    .Select(m => new ProductNamedRefDto
+                    {
+                        Id = m.ManufacturerCountryId,
+                        Name = m.Names.Select(t => (t.LanguageCode, t.Name)).ResolveTranslatedName(preferred),
+                    })
+                    .OrderBy(m => m.Name)
+                    .ToList(),
+                Images = images
+                    .Where(i => i.ProductColorId is null)
+                    .OrderBy(i => i.Order)
+                    .Select(i => new ProductImageDetailDto
+                    {
+                        Id = i.Id,
+                        ImageUrl = i.ImageUrl,
+                        Order = i.Order,
+                    })
+                    .ToList(),
+                Colors = colors
+                    .Select(c => new ProductColorDetailDto
+                    {
+                        ColorId = c.ColorId,
+                        HexCode = c.HexCode,
+                        Name = c.Names.Select(t => (t.LanguageCode, t.Name)).ResolveTranslatedName(preferred),
+                        Images = images
+                            .Where(i => i.ProductColorId == c.Id && colorIds.Contains(c.Id))
+                            .OrderBy(i => i.Order)
+                            .Select(i => new ProductImageDetailDto
+                            {
+                                Id = i.Id,
+                                ImageUrl = i.ImageUrl,
+                                Order = i.Order,
+                            })
+                            .ToList(),
+                    })
+                    .OrderBy(c => c.Name)
+                    .ToList(),
+            };
+
+            detail.HasSpin = await _productSpinRepository.Query()
+                .CountAsync(i => i.ProductId == id, cancellationToken) >= 2;
+
+            return ServiceResult<ProductDetailDto>.Success(detail);
         }
 
         public async Task<ServiceResult<PaginationResponseDto<ProductListItemDto>>> GetPagedAsync(
@@ -447,6 +655,214 @@ namespace ARCServer.Business.Services.Products
                     request.PageSize,
                     totalCount));
         }
+
+        public async Task<ServiceResult<PaginationResponseDto<PublicProductCardDto>>> GetCatalogPagedAsync(
+            ProductCatalogQueryDto request,
+            CancellationToken cancellationToken = default)
+        {
+            var lang = TranslationExtensions.NormalizeLanguageCode(request.Lang);
+            const string fallbackLang = "az";
+
+            // Filter-only query: no Includes — EXISTS/semijoins stay lean for large catalogs.
+            var filtered = ApplyCatalogFilters(
+                _productRepository.Query().AsNoTracking(),
+                request);
+
+            var totalCount = await filtered.CountAsync(cancellationToken);
+            if (totalCount == 0)
+            {
+                return ServiceResult<PaginationResponseDto<PublicProductCardDto>>.Success(
+                    PaginationResponseDto<PublicProductCardDto>.Create(
+                        [],
+                        request.SafePage,
+                        request.SafePageSize,
+                        0));
+            }
+
+            var pageIds = await filtered
+                .OrderByDescending(p => p.Id)
+                .Skip(request.Skip)
+                .Take(request.SafePageSize)
+                .Select(p => p.Id)
+                .ToListAsync(cancellationToken);
+
+            if (pageIds.Count == 0)
+            {
+                return ServiceResult<PaginationResponseDto<PublicProductCardDto>>.Success(
+                    PaginationResponseDto<PublicProductCardDto>.Create(
+                        [],
+                        request.SafePage,
+                        request.SafePageSize,
+                        totalCount));
+            }
+
+            // Project only the current page — translations/images loaded for page ids only.
+            var projected = await _productRepository.Query()
+                .AsNoTracking()
+                .Where(p => pageIds.Contains(p.Id))
+                .Select(p => new PublicProductCardDto
+                {
+                    Id = p.Id,
+                    Code = p.Code,
+                    CategoryId = p.CategoryId,
+                    SubCategoryId = p.SubCategoryId,
+                    HasWarranty = p.HasWarranty,
+                    IsMadeToOrder = p.IsMadeToOrder,
+                    Name =
+                        p.Translations
+                            .Where(t => t.Deleted == 0 && t.LanguageCode == lang)
+                            .Select(t => t.Name)
+                            .FirstOrDefault()
+                        ?? p.Translations
+                            .Where(t => t.Deleted == 0 && t.LanguageCode == fallbackLang)
+                            .Select(t => t.Name)
+                            .FirstOrDefault()
+                        ?? p.Translations
+                            .Where(t => t.Deleted == 0)
+                            .Select(t => t.Name)
+                            .FirstOrDefault()
+                        ?? string.Empty,
+                    Description =
+                        p.Translations
+                            .Where(t => t.Deleted == 0 && t.LanguageCode == lang)
+                            .Select(t => t.Description)
+                            .FirstOrDefault()
+                        ?? p.Translations
+                            .Where(t => t.Deleted == 0 && t.LanguageCode == fallbackLang)
+                            .Select(t => t.Description)
+                            .FirstOrDefault()
+                        ?? p.Translations
+                            .Where(t => t.Deleted == 0)
+                            .Select(t => t.Description)
+                            .FirstOrDefault()
+                        ?? string.Empty,
+                    ImageUrl =
+                        p.Images
+                            .Where(i => i.Deleted == 0 && i.ProductColorId == null)
+                            .OrderBy(i => i.Order)
+                            .Select(i => i.ImageUrl)
+                            .FirstOrDefault()
+                        ?? p.Images
+                            .Where(i => i.Deleted == 0)
+                            .OrderBy(i => i.Order)
+                            .Select(i => i.ImageUrl)
+                            .FirstOrDefault(),
+                })
+                .ToListAsync(cancellationToken);
+
+            var byId = projected.ToDictionary(p => p.Id);
+            IReadOnlyList<PublicProductCardDto> items = pageIds
+                .Where(byId.ContainsKey)
+                .Select(id => byId[id])
+                .Select(card =>
+                {
+                    if (string.IsNullOrWhiteSpace(card.ImageUrl))
+                    {
+                        card.ImageUrl = null;
+                    }
+
+                    return card;
+                })
+                .ToList();
+
+            return ServiceResult<PaginationResponseDto<PublicProductCardDto>>.Success(
+                PaginationResponseDto<PublicProductCardDto>.Create(
+                    items,
+                    request.SafePage,
+                    request.SafePageSize,
+                    totalCount));
+        }
+
+        private static IQueryable<Product> ApplyCatalogFilters(
+            IQueryable<Product> query,
+            ProductCatalogQueryDto request)
+        {
+            if (request.CategoryId is int categoryId && categoryId > 0)
+            {
+                query = query.Where(p => p.CategoryId == categoryId);
+            }
+
+            var subIds = request.ParseIds(request.SubCategoryIds);
+            if (subIds.Count > 0)
+            {
+                query = query.Where(p =>
+                    p.SubCategoryId != null && subIds.Contains(p.SubCategoryId.Value));
+            }
+
+            var brandIds = request.ParseIds(request.BrandIds);
+            if (brandIds.Count > 0)
+            {
+                query = query.Where(p =>
+                    p.Brands.Any(x => x.Deleted == 0 && brandIds.Contains(x.BrandId)));
+            }
+
+            var sizeIds = request.ParseIds(request.SizeIds);
+            if (sizeIds.Count > 0)
+            {
+                query = query.Where(p =>
+                    p.Sizes.Any(x => x.Deleted == 0 && sizeIds.Contains(x.SizeId)));
+            }
+
+            var diameterIds = request.ParseIds(request.DiameterIds);
+            if (diameterIds.Count > 0)
+            {
+                query = query.Where(p =>
+                    p.Diameters.Any(x => x.Deleted == 0 && diameterIds.Contains(x.DiameterId)));
+            }
+
+            var powerIds = request.ParseIds(request.PowerIds);
+            if (powerIds.Count > 0)
+            {
+                query = query.Where(p =>
+                    p.Powers.Any(x => x.Deleted == 0 && powerIds.Contains(x.PowerId)));
+            }
+
+            var countryIds = request.ParseIds(request.CountryIds);
+            if (countryIds.Count > 0)
+            {
+                query = query.Where(p =>
+                    p.ManufacturerCountries.Any(x =>
+                        x.Deleted == 0 && countryIds.Contains(x.ManufacturerCountryId)));
+            }
+
+            var colorIds = request.ParseIds(request.ColorIds);
+            if (colorIds.Count > 0)
+            {
+                query = query.Where(p =>
+                    p.Colors.Any(x => x.Deleted == 0 && colorIds.Contains(x.ColorId)));
+            }
+
+            if (request.HasWarranty is bool hasWarranty)
+            {
+                query = query.Where(p => p.HasWarranty == hasWarranty);
+            }
+
+            if (request.IsMadeToOrder is bool isMadeToOrder)
+            {
+                query = query.Where(p => p.IsMadeToOrder == isMadeToOrder);
+            }
+
+            var search = string.IsNullOrWhiteSpace(request.Search)
+                ? null
+                : request.Search.Trim();
+            if (search is not null)
+            {
+                // Avoid ToLower() so SQL can use indexes under case-insensitive collation.
+                var pattern = $"%{EscapeLike(search)}%";
+                query = query.Where(p =>
+                    EF.Functions.Like(p.Code, pattern)
+                    || p.Translations.Any(t =>
+                        t.Deleted == 0 && EF.Functions.Like(t.Name, pattern)));
+            }
+
+            return query;
+        }
+
+        private static string EscapeLike(string value) =>
+            value
+                .Replace("[", "[[]", StringComparison.Ordinal)
+                .Replace("%", "[%]", StringComparison.Ordinal)
+                .Replace("_", "[_]", StringComparison.Ordinal);
 
         public async Task<ServiceResult<bool>> DeleteAsync(
             int id,
@@ -666,12 +1082,128 @@ namespace ARCServer.Business.Services.Products
             return result;
         }
 
+        public const int MaxHomePageProducts = 8;
+
+        public async Task<ServiceResult<List<HomeProductDto>>> GetHomeProductsAsync(
+            CancellationToken cancellationToken = default)
+        {
+            var items = await _productRepository.Query()
+                .AsNoTracking()
+                .Where(p => p.IsHomePageProduct)
+                .Select(p => new HomeProductDto
+                {
+                    Id = p.Id,
+                    Code = p.Code,
+                    Name = p.Translations
+                        .Where(t => t.Deleted == 0 && t.LanguageCode == "az")
+                        .Select(t => t.Name)
+                        .FirstOrDefault() ?? string.Empty,
+                })
+                .OrderBy(p => p.Name)
+                .ToListAsync(cancellationToken);
+
+            return ServiceResult<List<HomeProductDto>>.Success(items);
+        }
+
+        public async Task<ServiceResult<List<HomeProductOptionDto>>> SearchHomeProductOptionsAsync(
+            string? search,
+            CancellationToken cancellationToken = default)
+        {
+            var query = _productRepository.Query().AsNoTracking();
+            var term = search?.Trim();
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                var lowered = term.ToLower();
+                query = query.Where(p => p.Translations.Any(t =>
+                    t.Deleted == 0 &&
+                    t.LanguageCode == "az" &&
+                    t.Name.ToLower().Contains(lowered)));
+            }
+
+            var items = await query
+                .Select(p => new HomeProductOptionDto
+                {
+                    Id = p.Id,
+                    IsHomePageProduct = p.IsHomePageProduct,
+                    Name = p.Translations
+                        .Where(t => t.Deleted == 0 && t.LanguageCode == "az")
+                        .Select(t => t.Name)
+                        .FirstOrDefault() ?? string.Empty,
+                })
+                .OrderBy(p => p.Name)
+                .Take(100)
+                .ToListAsync(cancellationToken);
+
+            return ServiceResult<List<HomeProductOptionDto>>.Success(items);
+        }
+
+        public async Task<ServiceResult<List<HomeProductDto>>> SetHomeProductsAsync(
+            SetHomeProductsDto dto,
+            CancellationToken cancellationToken = default)
+        {
+            var ids = dto.ProductIds ?? [];
+            if (ids.Count != ids.Distinct().Count())
+            {
+                return ServiceResult<List<HomeProductDto>>.Failure(new Dictionary<string, string[]>
+                {
+                    ["productIds"] = [ErrorMessages.Product.HomeProductIdsUnique],
+                });
+            }
+
+            if (ids.Count > MaxHomePageProducts)
+            {
+                return ServiceResult<List<HomeProductDto>>.Failure(new Dictionary<string, string[]>
+                {
+                    ["productIds"] = [ErrorMessages.Product.HomeProductLimit],
+                });
+            }
+
+            if (ids.Any(id => id <= 0))
+            {
+                return ServiceResult<List<HomeProductDto>>.Failure(new Dictionary<string, string[]>
+                {
+                    ["productIds"] = [ErrorMessages.Product.HomeProductNotFound],
+                });
+            }
+
+            if (ids.Count > 0)
+            {
+                var existingCount = await _productRepository.Query()
+                    .CountAsync(p => ids.Contains(p.Id), cancellationToken);
+                if (existingCount != ids.Count)
+                {
+                    return ServiceResult<List<HomeProductDto>>.Failure(new Dictionary<string, string[]>
+                    {
+                        ["productIds"] = [ErrorMessages.Product.HomeProductNotFound],
+                    });
+                }
+            }
+
+            await _productRepository.Query()
+                .Where(p => p.IsHomePageProduct && !ids.Contains(p.Id))
+                .ExecuteUpdateAsync(
+                    setters => setters.SetProperty(p => p.IsHomePageProduct, false),
+                    cancellationToken);
+
+            if (ids.Count > 0)
+            {
+                await _productRepository.Query()
+                    .Where(p => ids.Contains(p.Id))
+                    .ExecuteUpdateAsync(
+                        setters => setters.SetProperty(p => p.IsHomePageProduct, true),
+                        cancellationToken);
+            }
+
+            return await GetHomeProductsAsync(cancellationToken);
+        }
+
         private async Task<Product?> GetTrackedDetailAsync(
             int id,
             CancellationToken cancellationToken,
             bool asNoTracking = false)
         {
             var query = _productRepository.Query()
+                .AsSplitQuery()
                 .Include(p => p.Translations)
                 .Include(p => p.Category).ThenInclude(c => c.Translations)
                 .Include(p => p.SubCategory)
@@ -1089,40 +1621,37 @@ namespace ARCServer.Business.Services.Products
             };
         }
 
-        private static string GetAzName(IEnumerable<(string LanguageCode, string Name)> translations)
-        {
-            var list = translations.ToList();
-            var az = list.FirstOrDefault(t => t.LanguageCode == "az");
-            if (!string.IsNullOrWhiteSpace(az.Name))
-            {
-                return az.Name;
-            }
-
-            return list.Select(t => t.Name).FirstOrDefault(n => !string.IsNullOrWhiteSpace(n))
-                ?? string.Empty;
-        }
+        private static string GetAzName(
+            IEnumerable<(string LanguageCode, string Name)> translations,
+            string? preferredLang = null) =>
+            translations.ResolveTranslatedName(preferredLang);
 
         private static string NameFromTranslations(
-            ICollection<CategoryTranslation> translations) =>
-            GetAzName(translations.Select(t => (t.LanguageCode, t.Name)));
+            ICollection<CategoryTranslation> translations,
+            string? preferredLang = null) =>
+            GetAzName(translations.Select(t => (t.LanguageCode, t.Name)), preferredLang);
 
         private static string NameFromTranslations(
-            ICollection<SubCategoryTranslation> translations) =>
-            GetAzName(translations.Select(t => (t.LanguageCode, t.Name)));
+            ICollection<SubCategoryTranslation> translations,
+            string? preferredLang = null) =>
+            GetAzName(translations.Select(t => (t.LanguageCode, t.Name)), preferredLang);
 
         private static string NameFromTranslations(
-            ICollection<BrandTranslation> translations) =>
-            GetAzName(translations.Select(t => (t.LanguageCode, t.Name)));
+            ICollection<BrandTranslation> translations,
+            string? preferredLang = null) =>
+            GetAzName(translations.Select(t => (t.LanguageCode, t.Name)), preferredLang);
 
         private static string NameFromTranslations(
-            ICollection<ManufacturerCountryTranslation> translations) =>
-            GetAzName(translations.Select(t => (t.LanguageCode, t.Name)));
+            ICollection<ManufacturerCountryTranslation> translations,
+            string? preferredLang = null) =>
+            GetAzName(translations.Select(t => (t.LanguageCode, t.Name)), preferredLang);
 
         private static string NameFromTranslations(
-            ICollection<ColorTranslation> translations) =>
-            GetAzName(translations.Select(t => (t.LanguageCode, t.Name)));
+            ICollection<ColorTranslation> translations,
+            string? preferredLang = null) =>
+            GetAzName(translations.Select(t => (t.LanguageCode, t.Name)), preferredLang);
 
-        private static ProductDetailDto MapDetail(Product product)
+        private static ProductDetailDto MapDetail(Product product, string? preferredLang = null)
         {
             return new ProductDetailDto
             {
@@ -1131,11 +1660,11 @@ namespace ARCServer.Business.Services.Products
                 HasWarranty = product.HasWarranty,
                 IsMadeToOrder = product.IsMadeToOrder,
                 CategoryId = product.CategoryId,
-                CategoryName = NameFromTranslations(product.Category.Translations),
+                CategoryName = NameFromTranslations(product.Category.Translations, preferredLang),
                 SubCategoryId = product.SubCategoryId,
                 SubCategoryName = product.SubCategory is null
                     ? null
-                    : NameFromTranslations(product.SubCategory.Translations),
+                    : NameFromTranslations(product.SubCategory.Translations, preferredLang),
                 Translations = product.Translations
                     .Where(t => t.Deleted == 0)
                     .OrderBy(t => t.LanguageCode)
@@ -1151,7 +1680,7 @@ namespace ARCServer.Business.Services.Products
                     .Select(b => new ProductNamedRefDto
                     {
                         Id = b.BrandId,
-                        Name = NameFromTranslations(b.Brand.Translations),
+                        Name = NameFromTranslations(b.Brand.Translations, preferredLang),
                     })
                     .OrderBy(b => b.Name)
                     .ToList(),
@@ -1172,7 +1701,7 @@ namespace ARCServer.Business.Services.Products
                     .Select(m => new ProductNamedRefDto
                     {
                         Id = m.ManufacturerCountryId,
-                        Name = NameFromTranslations(m.ManufacturerCountry.Translations),
+                        Name = NameFromTranslations(m.ManufacturerCountry.Translations, preferredLang),
                     })
                     .OrderBy(m => m.Name)
                     .ToList(),
@@ -1191,7 +1720,7 @@ namespace ARCServer.Business.Services.Products
                     {
                         ColorId = c.ColorId,
                         HexCode = c.Color.HexCode,
-                        Name = NameFromTranslations(c.Color.Translations),
+                        Name = NameFromTranslations(c.Color.Translations, preferredLang),
                         Images = c.Images
                             .Where(i => i.Deleted == 0)
                             .OrderBy(i => i.Order)

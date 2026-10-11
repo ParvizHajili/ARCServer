@@ -8,6 +8,8 @@ namespace ARCServer.Domain.Entities
 
         public bool IsMadeToOrder { get; set; }
 
+        public bool IsHomePageProduct { get; set; }
+
         public int ViewCount { get; set; }
 
         public int CategoryId { get; set; }

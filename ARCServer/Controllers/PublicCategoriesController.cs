@@ -1,13 +1,11 @@
 using ARCServer.Business.Dtos.Categories;
 using ARCServer.Business.Services.Categories;
 using ARCServer.Controllers.Base;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ARCServer.Controllers
 {
     [ApiController]
-    [AllowAnonymous]
     [Route("api/categories")]
     public class PublicCategoriesController : ApiControllerBase
     {

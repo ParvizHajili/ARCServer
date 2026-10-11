@@ -11,7 +11,11 @@ namespace ARCServer
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers(options =>
+            {
+                // Dashboard area → JWT required; public api/* stays anonymous by default.
+                options.Conventions.Add(new DashboardAuthorizeConvention());
+            });
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddArcSwagger();
 
@@ -26,7 +30,9 @@ namespace ARCServer
                     policy
                         .WithOrigins(
                             "http://localhost:5173",
-                            "https://localhost:5173")
+                            "https://localhost:5173",
+                            "http://127.0.0.1:5173",
+                            "https://127.0.0.1:5173")
                         .AllowAnyHeader()
                         .AllowAnyMethod();
                 });

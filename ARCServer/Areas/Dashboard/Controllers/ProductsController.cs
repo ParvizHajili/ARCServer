@@ -44,6 +44,38 @@ namespace ARCServer.Areas.Dashboard.Controllers
             return FromResult(result);
         }
 
+        [HttpGet("home")]
+        [RequirePermission(PermissionCodes.Products.List)]
+        [ProducesResponseType(typeof(List<HomeProductDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetHomeProducts(CancellationToken cancellationToken)
+        {
+            var result = await _service.GetHomeProductsAsync(cancellationToken);
+            return FromResult(result);
+        }
+
+        [HttpGet("home/options")]
+        [RequirePermission(PermissionCodes.Products.List)]
+        [ProducesResponseType(typeof(List<HomeProductOptionDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> SearchHomeOptions(
+            [FromQuery] string? search,
+            CancellationToken cancellationToken)
+        {
+            var result = await _service.SearchHomeProductOptionsAsync(search, cancellationToken);
+            return FromResult(result);
+        }
+
+        [HttpPut("home")]
+        [RequirePermission(PermissionCodes.Products.Update)]
+        [ProducesResponseType(typeof(List<HomeProductDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> SetHomeProducts(
+            [FromBody] SetHomeProductsDto request,
+            CancellationToken cancellationToken)
+        {
+            var result = await _service.SetHomeProductsAsync(request, cancellationToken);
+            return FromResult(result);
+        }
+
         [HttpGet]
         [RequirePermission(PermissionCodes.Products.List)]
         [ProducesResponseType(typeof(PaginationResponseDto<ProductListItemDto>), StatusCodes.Status200OK)]
