@@ -76,7 +76,7 @@ namespace ARCServer.Data.Configurations
                 .HasForeignKey(x => x.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.HasMany(x => x.SpinImages)
+            builder.HasMany(x => x.Videos)
                 .WithOne(x => x.Product)
                 .HasForeignKey(x => x.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);

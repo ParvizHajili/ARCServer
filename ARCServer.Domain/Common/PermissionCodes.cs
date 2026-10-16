@@ -75,6 +75,11 @@ namespace ARCServer.Domain.Common
             public const string Update = "HeroVideo.Update";
         }
 
+        public static class Inquiries
+        {
+            public const string List = "Inquiries.List";
+        }
+
         public static class Products
         {
             public const string List = "Products.List";

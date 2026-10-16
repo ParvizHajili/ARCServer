@@ -9,8 +9,8 @@ namespace ARCServer.Business.Common.Storage
 
         public const string Products = "product";
 
-        public const string ProductSpins = "product-spin";
-
         public const string HeroVideo = "hero-video";
+
+        public const string Product360Videos = "product-360-video";
     }
 }

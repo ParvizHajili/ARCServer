@@ -46,6 +46,13 @@ namespace ARCServer.Business.Dtos.Products
                     ErrorMessages.Product.InvalidJson);
             }
 
+            if (!TryDeserialize(form.KeepVideoIds, out List<int>? keepVideoIds, out _))
+            {
+                return ServiceResult<UpdateProductDto>.Failure(
+                    "keepVideoIds",
+                    ErrorMessages.Product.InvalidJson);
+            }
+
             var update = new UpdateProductDto
             {
                 Code = common!.Code,
@@ -63,8 +70,10 @@ namespace ARCServer.Business.Dtos.Products
                 Images = common.Images,
                 ImageColorIds = common.ImageColorIds,
                 ProductImages = common.ProductImages,
+                Videos = common.Videos,
                 KeepImageIds = keepImageIds ?? [],
                 KeepProductImageIds = keepProductImageIds ?? [],
+                KeepVideoIds = keepVideoIds ?? [],
             };
 
             return ServiceResult<UpdateProductDto>.Success(update);
@@ -150,6 +159,10 @@ namespace ARCServer.Business.Dtos.Products
                 .Where(f => f is { Length: > 0 })
                 .ToList() ?? [];
 
+            var videos = form.Videos?
+                .Where(f => f is { Length: > 0 })
+                .ToList() ?? [];
+
             dto = new CreateProductDto
             {
                 Code = form.Code?.Trim() ?? string.Empty,
@@ -167,6 +180,7 @@ namespace ARCServer.Business.Dtos.Products
                 Images = images,
                 ImageColorIds = imageColorIds ?? [],
                 ProductImages = productImages,
+                Videos = videos,
             };
 
             return true;

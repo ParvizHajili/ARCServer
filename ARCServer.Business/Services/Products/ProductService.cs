@@ -24,7 +24,7 @@ namespace ARCServer.Business.Services.Products
         private readonly IRepository<ProductManufacturerCountry> _productCountryRepository;
         private readonly IRepository<ProductColor> _productColorRepository;
         private readonly IRepository<ProductImage> _productImageRepository;
-        private readonly IRepository<ProductSpinImage> _productSpinRepository;
+        private readonly IRepository<Product360Video> _productVideoRepository;
         private readonly IRepository<Category> _categoryRepository;
         private readonly IRepository<SubCategory> _subCategoryRepository;
         private readonly IRepository<Brand> _brandRepository;
@@ -49,7 +49,7 @@ namespace ARCServer.Business.Services.Products
             IRepository<ProductManufacturerCountry> productCountryRepository,
             IRepository<ProductColor> productColorRepository,
             IRepository<ProductImage> productImageRepository,
-            IRepository<ProductSpinImage> productSpinRepository,
+            IRepository<Product360Video> productVideoRepository,
             IRepository<Category> categoryRepository,
             IRepository<SubCategory> subCategoryRepository,
             IRepository<Brand> brandRepository,
@@ -73,7 +73,7 @@ namespace ARCServer.Business.Services.Products
             _productCountryRepository = productCountryRepository;
             _productColorRepository = productColorRepository;
             _productImageRepository = productImageRepository;
-            _productSpinRepository = productSpinRepository;
+            _productVideoRepository = productVideoRepository;
             _categoryRepository = categoryRepository;
             _subCategoryRepository = subCategoryRepository;
             _brandRepository = brandRepository;
@@ -115,8 +115,16 @@ namespace ARCServer.Business.Services.Products
                 return codeConflict;
             }
 
+            if (dto.Videos.Count > 1)
+            {
+                return ServiceResult<ProductDetailDto>.Failure(
+                    "videos",
+                    ErrorMessages.Product.SingleVideoOnly);
+            }
+
             List<(int ColorId, string Url)> uploaded;
             List<string> productImageUrls;
+            List<string> videoUrls;
             try
             {
                 uploaded = await UploadImagesAsync(dto.Images, dto.ImageColorIds, cancellationToken);
@@ -127,6 +135,21 @@ namespace ARCServer.Business.Services.Products
                 return ServiceResult<ProductDetailDto>.Failure(
                     "images",
                     ErrorMessages.Product.ImageUploadFailed);
+            }
+
+            try
+            {
+                videoUrls = await UploadVideosAsync(dto.Videos, cancellationToken);
+            }
+            catch (ArgumentException ex)
+            {
+                return ServiceResult<ProductDetailDto>.Failure("videos", ex.Message);
+            }
+            catch (Exception)
+            {
+                return ServiceResult<ProductDetailDto>.Failure(
+                    "videos",
+                    ErrorMessages.Product.VideoUploadFailed);
             }
 
             var now = DateTime.UtcNow;
@@ -248,6 +271,19 @@ namespace ARCServer.Business.Services.Products
                 });
             }
 
+            var videoOrder = 1;
+            foreach (var url in videoUrls)
+            {
+                product.Videos.Add(new Product360Video
+                {
+                    VideoUrl = url,
+                    Order = videoOrder++,
+                    CreateDate = now,
+                    CreatorId = creatorId,
+                    Deleted = 0,
+                });
+            }
+
             await _productRepository.AddAsync(product, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -342,8 +378,30 @@ namespace ARCServer.Business.Services.Products
                     ErrorMessages.Product.ProductImagesRequired);
             }
 
+            var existingVideos = product.Videos
+                .Where(v => v.Deleted == 0)
+                .ToDictionary(v => v.Id);
+            var keepVideoIds = dto.KeepVideoIds.Distinct().ToHashSet();
+            foreach (var keepId in keepVideoIds)
+            {
+                if (!existingVideos.ContainsKey(keepId))
+                {
+                    return ServiceResult<ProductDetailDto>.Failure(
+                        "keepVideoIds",
+                        ErrorMessages.Format(ErrorMessages.Common.NotFound, "360 video"));
+                }
+            }
+
+            if (keepVideoIds.Count + dto.Videos.Count > 1)
+            {
+                return ServiceResult<ProductDetailDto>.Failure(
+                    "videos",
+                    ErrorMessages.Product.SingleVideoOnly);
+            }
+
             List<(int ColorId, string Url)> uploaded;
             List<string> productImageUrls;
+            List<string> videoUrls;
             try
             {
                 uploaded = await UploadImagesAsync(dto.Images, dto.ImageColorIds, cancellationToken);
@@ -354,6 +412,21 @@ namespace ARCServer.Business.Services.Products
                 return ServiceResult<ProductDetailDto>.Failure(
                     "images",
                     ErrorMessages.Product.ImageUploadFailed);
+            }
+
+            try
+            {
+                videoUrls = await UploadVideosAsync(dto.Videos, cancellationToken);
+            }
+            catch (ArgumentException ex)
+            {
+                return ServiceResult<ProductDetailDto>.Failure("videos", ex.Message);
+            }
+            catch (Exception)
+            {
+                return ServiceResult<ProductDetailDto>.Failure(
+                    "videos",
+                    ErrorMessages.Product.VideoUploadFailed);
             }
 
             var now = DateTime.UtcNow;
@@ -373,6 +446,7 @@ namespace ARCServer.Business.Services.Products
             UpsertCountries(product, dto.ManufacturerCountryIds, now, updaterId);
             UpsertColorsAndImages(product, dto.ColorIds, keepIds, uploaded, now, updaterId);
             UpsertProductImages(product, keepProductIds, productImageUrls, now, updaterId);
+            UpsertVideos(product, keepVideoIds, videoUrls, now, updaterId);
 
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
@@ -494,6 +568,18 @@ namespace ARCServer.Business.Services.Products
                 })
                 .ToListAsync(cancellationToken);
 
+            var videos = await _productVideoRepository.Query()
+                .AsNoTracking()
+                .Where(v => v.ProductId == id)
+                .OrderBy(v => v.Order)
+                .Select(v => new ProductVideoDetailDto
+                {
+                    Id = v.Id,
+                    VideoUrl = v.VideoUrl,
+                    Order = v.Order,
+                })
+                .ToListAsync(cancellationToken);
+
             var images = await _productImageRepository.Query()
                 .AsNoTracking()
                 .Where(i => i.ProductId == id)
@@ -564,6 +650,7 @@ namespace ARCServer.Business.Services.Products
                     })
                     .OrderBy(m => m.Name)
                     .ToList(),
+                Videos = videos,
                 Images = images
                     .Where(i => i.ProductColorId is null)
                     .OrderBy(i => i.Order)
@@ -594,9 +681,6 @@ namespace ARCServer.Business.Services.Products
                     .OrderBy(c => c.Name)
                     .ToList(),
             };
-
-            detail.HasSpin = await _productSpinRepository.Query()
-                .CountAsync(i => i.ProductId == id, cancellationToken) >= 2;
 
             return ServiceResult<ProductDetailDto>.Success(detail);
         }
@@ -920,9 +1004,9 @@ namespace ARCServer.Business.Services.Products
                 _productImageRepository.SoftDelete(image, deletorId);
             }
 
-            foreach (var image in product.SpinImages.Where(i => i.Deleted == 0).ToList())
+            foreach (var video in product.Videos.Where(v => v.Deleted == 0).ToList())
             {
-                _productSpinRepository.SoftDelete(image, deletorId);
+                _productVideoRepository.SoftDelete(video, deletorId);
             }
 
             _productRepository.SoftDelete(product, deletorId);
@@ -1060,6 +1144,23 @@ namespace ARCServer.Business.Services.Products
                     CloudinaryFolders.Products,
                     cancellationToken);
                 result.Add((imageColorIds[i], url));
+            }
+
+            return result;
+        }
+
+        private async Task<List<string>> UploadVideosAsync(
+            List<IFormFile> videos,
+            CancellationToken cancellationToken)
+        {
+            var result = new List<string>();
+            foreach (var file in videos)
+            {
+                var url = await _cloudinaryService.UploadVideoAsync(
+                    file,
+                    CloudinaryFolders.Product360Videos,
+                    cancellationToken);
+                result.Add(url);
             }
 
             return result;
@@ -1218,7 +1319,7 @@ namespace ARCServer.Business.Services.Products
                 .Include(p => p.Colors).ThenInclude(c => c.Color).ThenInclude(c => c.Translations)
                 .Include(p => p.Colors).ThenInclude(c => c.Images)
                 .Include(p => p.Images)
-                .Include(p => p.SpinImages)
+                .Include(p => p.Videos)
                 .Where(p => p.Id == id);
 
             if (asNoTracking)
@@ -1578,6 +1679,41 @@ namespace ARCServer.Business.Services.Products
             }
         }
 
+        private void UpsertVideos(
+            Product product,
+            HashSet<int> keepVideoIds,
+            List<string> uploadedUrls,
+            DateTime now,
+            int? userId)
+        {
+            foreach (var video in product.Videos.Where(v => v.Deleted == 0).ToList())
+            {
+                if (!keepVideoIds.Contains(video.Id))
+                {
+                    _productVideoRepository.SoftDelete(video, userId);
+                }
+            }
+
+            var nextOrder = product.Videos
+                .Where(v => v.Deleted == 0 && keepVideoIds.Contains(v.Id))
+                .Select(v => v.Order)
+                .DefaultIfEmpty(0)
+                .Max() + 1;
+
+            foreach (var url in uploadedUrls)
+            {
+                product.Videos.Add(new Product360Video
+                {
+                    ProductId = product.Id,
+                    VideoUrl = url,
+                    Order = nextOrder++,
+                    CreateDate = now,
+                    CreatorId = userId,
+                    Deleted = 0,
+                });
+            }
+        }
+
         private static IEnumerable<ProductImage> GalleryImages(Product product)
         {
             return product.Images.Where(i =>
@@ -1704,6 +1840,16 @@ namespace ARCServer.Business.Services.Products
                         Name = NameFromTranslations(m.ManufacturerCountry.Translations, preferredLang),
                     })
                     .OrderBy(m => m.Name)
+                    .ToList(),
+                Videos = product.Videos
+                    .Where(v => v.Deleted == 0)
+                    .OrderBy(v => v.Order)
+                    .Select(v => new ProductVideoDetailDto
+                    {
+                        Id = v.Id,
+                        VideoUrl = v.VideoUrl,
+                        Order = v.Order,
+                    })
                     .ToList(),
                 Images = GalleryImages(product)
                     .OrderBy(i => i.Order)

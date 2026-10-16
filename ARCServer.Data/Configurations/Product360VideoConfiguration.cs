@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ARCServer.Data.Configurations
 {
-    public class ProductSpinImageConfiguration : IEntityTypeConfiguration<ProductSpinImage>
+    public class Product360VideoConfiguration : IEntityTypeConfiguration<Product360Video>
     {
-        public void Configure(EntityTypeBuilder<ProductSpinImage> builder)
+        public void Configure(EntityTypeBuilder<Product360Video> builder)
         {
-            builder.ToTable("ProductSpinImages");
+            builder.ToTable("Product360Videos");
 
-            builder.Property(x => x.ImageUrl)
+            builder.Property(x => x.VideoUrl)
                 .HasMaxLength(500)
                 .IsRequired();
 

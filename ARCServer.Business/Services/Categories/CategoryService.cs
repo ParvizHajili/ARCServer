@@ -15,6 +15,7 @@ namespace ARCServer.Business.Services.Categories
     public class CategoryService : BaseService, ICategoryService
     {
         private readonly IRepository<Category> _categoryRepository;
+        private readonly IRepository<Product> _productRepository;
         private readonly IRepository<SubCategory> _subCategoryRepository;
         private readonly IRepository<CategoryTranslation> _categoryTranslationRepository;
         private readonly IRepository<SubCategoryTranslation> _subCategoryTranslationRepository;
@@ -27,6 +28,7 @@ namespace ARCServer.Business.Services.Categories
 
         public CategoryService(
             IRepository<Category> categoryRepository,
+            IRepository<Product> productRepository,
             IRepository<SubCategory> subCategoryRepository,
             IRepository<CategoryTranslation> categoryTranslationRepository,
             IRepository<SubCategoryTranslation> subCategoryTranslationRepository,
@@ -38,6 +40,7 @@ namespace ARCServer.Business.Services.Categories
             IValidator<PaginationRequestDto> paginationValidator)
         {
             _categoryRepository = categoryRepository;
+            _productRepository = productRepository;
             _subCategoryRepository = subCategoryRepository;
             _categoryTranslationRepository = categoryTranslationRepository;
             _subCategoryTranslationRepository = subCategoryTranslationRepository;
@@ -287,6 +290,8 @@ namespace ARCServer.Business.Services.Categories
         {
             var categories = await _categoryRepository.Query()
                 .AsNoTracking()
+                .Where(category => _productRepository.Query()
+                    .Any(product => product.CategoryId == category.Id))
                 .Include(x => x.Translations)
                 .Include(x => x.SubCategories)
                     .ThenInclude(x => x.Translations)

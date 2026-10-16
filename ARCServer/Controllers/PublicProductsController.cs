@@ -12,16 +12,13 @@ namespace ARCServer.Controllers
     {
         private readonly IDashboardService _dashboardService;
         private readonly IProductService _productService;
-        private readonly IProductSpinService _spinService;
 
         public PublicProductsController(
             IDashboardService dashboardService,
-            IProductService productService,
-            IProductSpinService spinService)
+            IProductService productService)
         {
             _dashboardService = dashboardService;
             _productService = productService;
-            _spinService = spinService;
         }
 
         [HttpGet]
@@ -48,15 +45,6 @@ namespace ARCServer.Controllers
                 Response.Headers.CacheControl = "public, max-age=60";
             }
 
-            return FromResult(result);
-        }
-
-        [HttpGet("{id:int}/spin")]
-        [ProducesResponseType(typeof(List<ProductSpinImageDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetSpin(int id, CancellationToken cancellationToken)
-        {
-            var result = await _spinService.GetPublicFramesAsync(id, cancellationToken);
             return FromResult(result);
         }
 

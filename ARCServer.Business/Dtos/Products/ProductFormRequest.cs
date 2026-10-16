@@ -48,5 +48,10 @@ namespace ARCServer.Business.Dtos.Products
 
         /// <summary>JSON: int[] — yalnız update, rəngə bağlı olmayan şəkillər</summary>
         public string KeepProductImageIds { get; set; } = "[]";
+
+        public List<IFormFile> Videos { get; set; } = [];
+
+        /// <summary>JSON: int[] — yalnız update</summary>
+        public string KeepVideoIds { get; set; } = "[]";
     }
 }

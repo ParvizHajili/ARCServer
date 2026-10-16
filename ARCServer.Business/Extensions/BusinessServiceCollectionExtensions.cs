@@ -3,6 +3,7 @@ using ARCServer.Business.Services.Brands;
 using ARCServer.Business.Services.Catalog;
 using ARCServer.Business.Services.Categories;
 using ARCServer.Business.Services.Colors;
+using ARCServer.Business.Services.Contact;
 using ARCServer.Business.Services.Dashboard;
 using ARCServer.Business.Services.HeroVideos;
 using ARCServer.Business.Services.Diameters;
@@ -46,10 +47,10 @@ namespace ARCServer.Business.Extensions
             services.AddScoped<IPowerService, PowerService>();
             services.AddScoped<IColorService, ColorService>();
             services.AddScoped<IProductService, ProductService>();
-            services.AddScoped<IProductSpinService, ProductSpinService>();
             services.AddScoped<ICatalogFilterService, CatalogFilterService>();
             services.AddScoped<IDashboardService, DashboardService>();
             services.AddScoped<IHeroVideoService, HeroVideoService>();
+            services.AddScoped<IContactInquiryService, ContactInquiryService>();
 
             return services;
         }

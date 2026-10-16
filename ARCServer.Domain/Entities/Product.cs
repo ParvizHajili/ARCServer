@@ -37,6 +37,6 @@ namespace ARCServer.Domain.Entities
 
         public ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
 
-        public ICollection<ProductSpinImage> SpinImages { get; set; } = new List<ProductSpinImage>();
+        public ICollection<Product360Video> Videos { get; set; } = new List<Product360Video>();
     }
 }

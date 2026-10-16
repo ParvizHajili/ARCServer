@@ -170,11 +170,25 @@ namespace ARCServer.Business.Common.Messages
                 "Şəkillər və rəng id-ləri uyğun gəlmir.";
             public const string InvalidJson = "JSON formatı düzgün deyil.";
             public const string ImageUploadFailed = "Şəkil yüklənərkən xəta baş verdi.";
-            public const string InvalidSpinFrames = "360 şəkil sırası düzgün deyil.";
+            public const string VideoUploadFailed = "360 video yüklənərkən xəta baş verdi.";
+            public const string SingleVideoOnly =
+                "Hələlik hər məhsul üçün yalnız bir 360 video yüklənə bilər.";
             public const string IdsUnique = "{0} unikaldır olmalıdır.";
             public const string HomeProductLimit = "Ən çox 8 məhsul seçilə bilər.";
             public const string HomeProductNotFound = "Seçilmiş məhsullardan biri tapılmadı.";
             public const string HomeProductIdsUnique = "Məhsul id-ləri unikaldır olmalıdır.";
+        }
+
+        public static class Contact
+        {
+            public const string NameRequired = "Ad mütləq daxil edilməlidir.";
+            public const string NameLength = "Ad 2 ilə 150 simvol arasında olmalıdır.";
+            public const string MessageRequired = "Mesaj mütləq daxil edilməlidir.";
+            public const string MessageLength = "Mesaj 4 ilə 2000 simvol arasında olmalıdır.";
+            public const string PhoneInvalid = "Telefon formatı düzgün deyil. Nümunə: +994 70 xxx-xx-xx";
+            public const string EmailInvalid = "Email formatı düzgün deyil.";
+            public const string EmailLength = "Email maksimum 200 simvol ola bilər.";
+            public const string EitherRequired = "Telefon və ya email-dən ən azı birini qeyd edin.";
         }
 
         public static string Format(string template, params object[] args) =>

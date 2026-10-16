@@ -43,6 +43,9 @@ namespace ARCServer.Business.Dtos.Products
 
         /// <summary>Product gallery images, not tied to a color.</summary>
         public List<IFormFile> ProductImages { get; set; } = [];
+
+        /// <summary>Optional 360 videos. The form currently sends at most one.</summary>
+        public List<IFormFile> Videos { get; set; } = [];
     }
 
     public class UpdateProductDto : CreateProductDto
@@ -50,6 +53,8 @@ namespace ARCServer.Business.Dtos.Products
         public List<int> KeepImageIds { get; set; } = [];
 
         public List<int> KeepProductImageIds { get; set; } = [];
+
+        public List<int> KeepVideoIds { get; set; } = [];
     }
 
     public class ProductTranslationResultDto
@@ -73,6 +78,15 @@ namespace ARCServer.Business.Dtos.Products
         public int Id { get; set; }
 
         public string ImageUrl { get; set; } = string.Empty;
+
+        public int Order { get; set; }
+    }
+
+    public class ProductVideoDetailDto
+    {
+        public int Id { get; set; }
+
+        public string VideoUrl { get; set; } = string.Empty;
 
         public int Order { get; set; }
     }
@@ -120,9 +134,9 @@ namespace ARCServer.Business.Dtos.Products
 
         public List<ProductImageDetailDto> Images { get; set; } = [];
 
-        public List<ProductColorDetailDto> Colors { get; set; } = [];
+        public List<ProductVideoDetailDto> Videos { get; set; } = [];
 
-        public bool HasSpin { get; set; }
+        public List<ProductColorDetailDto> Colors { get; set; } = [];
     }
 
     public class ProductListItemDto

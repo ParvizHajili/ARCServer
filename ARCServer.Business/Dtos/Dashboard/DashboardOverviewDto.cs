@@ -40,8 +40,6 @@ namespace ARCServer.Business.Dtos.Dashboard
 
         public int MadeToOrderCount { get; set; }
 
-        public int SpinProductCount { get; set; }
-
         public int TotalViews { get; set; }
 
         public int AddedLast30Days { get; set; }

@@ -17,7 +17,6 @@ namespace ARCServer.Business.Services.Dashboard
         private readonly IRepository<Brand> _brandRepository;
         private readonly IRepository<Color> _colorRepository;
         private readonly IRepository<ManufacturerCountry> _countryRepository;
-        private readonly IRepository<ProductSpinImage> _spinRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IUnitOfWork _unitOfWork;
 
@@ -28,7 +27,6 @@ namespace ARCServer.Business.Services.Dashboard
             IRepository<Brand> brandRepository,
             IRepository<Color> colorRepository,
             IRepository<ManufacturerCountry> countryRepository,
-            IRepository<ProductSpinImage> spinRepository,
             UserManager<ApplicationUser> userManager,
             IUnitOfWork unitOfWork)
         {
@@ -38,7 +36,6 @@ namespace ARCServer.Business.Services.Dashboard
             _brandRepository = brandRepository;
             _colorRepository = colorRepository;
             _countryRepository = countryRepository;
-            _spinRepository = spinRepository;
             _userManager = userManager;
             _unitOfWork = unitOfWork;
         }
@@ -99,10 +96,6 @@ namespace ARCServer.Business.Services.Dashboard
                 ManufacturerCountryCount = await _countryRepository.Query().CountAsync(cancellationToken),
                 WarrantyCount = await products.CountAsync(p => p.HasWarranty, cancellationToken),
                 MadeToOrderCount = await products.CountAsync(p => p.IsMadeToOrder, cancellationToken),
-                SpinProductCount = await _spinRepository.Query()
-                    .Select(s => s.ProductId)
-                    .Distinct()
-                    .CountAsync(cancellationToken),
                 TotalViews = await products.SumAsync(p => (int?)p.ViewCount, cancellationToken) ?? 0,
                 AddedLast30Days = await products.CountAsync(p => p.CreateDate >= since, cancellationToken),
                 ProductsByCategory = byCategory,
